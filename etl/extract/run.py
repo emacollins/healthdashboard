@@ -1,11 +1,7 @@
 import xml.etree.ElementTree as ET
 import pandas as pd
 import datetime as dt
-
-ACTIVITY_HARVEST_FILE = '/Users/ericcollins/healthdashboard_data/harvest/2024-02-29/apple_health/apple_health_export/export.xml'
-SLEEP_HARVEST_FILE = '/Users/ericcollins/healthdashboard_data/harvest/2023-05-13/PillowData.csv'
-EXTRACT_FILE = '/Users/ericcollins/healthdashboard_data/extract/apple_health_extract.csv'
-
+import argparse
 
 def get_activity_data():
     # create element tree object
@@ -33,10 +29,21 @@ def get_activity_data():
     return record_data
 
 
-def run():
+def main(harvest_zip_file: str) -> None:
+    """Main function to run extract process
+
+    The extract process takes the zip file exported from Apple
+    Health and process the XML file to get tabular health data.
+
+    Args:
+        harvest_zip_file (str): Path to zip file (can be S3 URI)
+    """
     activity_data = get_activity_data()
     activity_data.to_csv("test.csv", index=False)
     
 
 if __name__ == '__main__':
-    run()
+    parser = argparse.ArgumentParser(description='Health Dashboard Extract Process')
+    parser.add_argument('--harvest_zip_file', type=str, help='Path to activity harvest file')
+    args = parser.parse_args()
+    main(args.harvest_zip_file)
