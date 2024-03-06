@@ -1,2 +1,2 @@
-# healthdashboard
-Dashboard for Apple Watch
+# Dashboard for Apple Health Data
+
