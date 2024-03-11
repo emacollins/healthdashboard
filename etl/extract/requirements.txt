@@ -1,3 +1,4 @@
 pandas
 fsspec
 boto3
+s3fs

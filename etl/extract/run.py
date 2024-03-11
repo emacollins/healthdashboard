@@ -29,7 +29,9 @@ def unzip_harvest_file(input_path: str) -> str:
     """
     logger.info(f"Unzipping harvest file: {input_path}")
 
-    tmp_file_path = '/tmp/zipfile.zip'
+    tmp_dir = os.path.dirname(os.path.realpath(__file__)) + "/tmp/"
+    os.makedirs(tmp_dir, exist_ok=True)
+    tmp_file_path = os.path.join(tmp_dir, 'zipfile.zip')
 
     if utils.is_s3_uri(input_path):
         bucket, key = utils.parse_s3_uri(input_path)
@@ -40,12 +42,10 @@ def unzip_harvest_file(input_path: str) -> str:
         logger.info(f"Copying file locally: {input_path}")
         shutil.copy(input_path, tmp_file_path)
 
-    script_dir = os.path.dirname(os.path.realpath(__file__))
-
     with zipfile.ZipFile(tmp_file_path, 'r') as zip_ref:
         logger.info("Extracting zip file")
-        zip_ref.extractall(script_dir)
-    extracted_file_path = os.path.join(script_dir, 'apple_health_export/export.xml')
+        zip_ref.extractall(tmp_dir)
+    extracted_file_path = os.path.join(tmp_dir, 'apple_health_export/export.xml')
 
     logger.info(f"Extracted file path: {extracted_file_path}")
 
@@ -76,15 +76,17 @@ def main(input_path: str) -> None:
         input_path (str): Path to zip file (can be S3 URI)
     """
 
-    data_file_path = unzip_harvest_file(input_path)
-    data = get_data(data_file_path)
-    for tag, df in data.items():
-        output_path = input_path.replace('harvest', 'extract')
-        output_path = os.path.splitext(output_path)[0] + tag + '.csv'
-        df.to_csv(output_path, index=False)
-        logger.info(f"Data written to: {output_path}")
-    logger.info("Extract process completed")
-    
+    try:
+        data_file_path = unzip_harvest_file(input_path)
+        data = get_data(data_file_path)
+        for tag, df in data.items():
+            output_path = input_path.replace('harvest', 'extract')
+            output_path = os.path.splitext(output_path)[0] + tag + '.csv'
+            df.to_csv(output_path, index=False)
+            logger.info(f"Data written to: {output_path}")
+        logger.info("Extract process completed")
+    finally:
+        shutil.rmtree("tmp/")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Health Dashboard Extract Process')
