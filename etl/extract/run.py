@@ -18,6 +18,19 @@ import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+# Create a console handler and set level to info
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+
+# Create a formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# Add formatter to handler
+handler.setFormatter(formatter)
+
+# Add handler to logger
+logger.addHandler(handler)
+
 def unzip_harvest_file(input_path: str) -> str:
     """Unzip the harvest file and return the path to the XML file
 
