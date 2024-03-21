@@ -1,29 +1,29 @@
 -- Add migration script here
 -- SQL file to create tables with named unique constraints
 
--- Create the user_table with a named unique constraint on the email field
-CREATE TABLE user_table (
+-- Create the users table with named unique constraints on the username and email fields
+CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE
 );
 
--- Create the activity_type_table
-CREATE TABLE activity_type_table (
+-- Create the activity_types table
+CREATE TABLE activity_types (
     id SERIAL PRIMARY KEY,
     activity_name TEXT NOT NULL,
     CONSTRAINT unique_activity_name UNIQUE (activity_name)
 );
 
--- Create the unit_table
-CREATE TABLE unit_table (
+-- Create the units table
+CREATE TABLE units (
     id SERIAL PRIMARY KEY,
     unit_name TEXT NOT NULL,
     CONSTRAINT unique_unit_name UNIQUE (unit_name)
 );
 
 -- Create the source_table with a named unique constraint on the name field
-CREATE TABLE source_table (
+CREATE TABLE sources (
     id SERIAL PRIMARY KEY,
     source_name TEXT NOT NULL,
     source_version TEXT,
@@ -36,12 +36,12 @@ CREATE TABLE source_table (
 );
 
 -- Create the fact_table
-CREATE TABLE fact_table (
+CREATE TABLE facts (
     id BIGSERIAL PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES user_table(id),
-    activity_type_id INT NOT NULL REFERENCES activity_type_table(id),
-    unit_id INT NOT NULL REFERENCES unit_table(id),
-    source_id INT NOT NULL REFERENCES source_table(id),
+    user_id INT NOT NULL REFERENCES users(id),
+    activity_type_id INT NOT NULL REFERENCES activity_types(id),
+    unit_id INT NOT NULL REFERENCES units(id),
+    source_id INT NOT NULL REFERENCES sources(id),
     creation_ts TIMESTAMPTZ NOT NULL,
     start_ts TIMESTAMPTZ NOT NULL,
     end_ts TIMESTAMPTZ NOT NULL,
@@ -51,13 +51,13 @@ CREATE TABLE fact_table (
 
 -- Create the summary_table with appropriate unique constraints
 -- (Add unique constraints as needed based on your CSV extract structure)
-CREATE TABLE summary_table (
+CREATE TABLE summary (
     id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL REFERENCES user_table(id),
+    user_id INT NOT NULL REFERENCES users(id),
     creation_date DATE NOT NULL,
     active_energy_burned FLOAT,
     active_energy_burned_goal FLOAT,
-    active_energy_burned_unit_id INT REFERENCES unit_table(id),
+    active_energy_burned_unit_id INT REFERENCES units(id),
     move_time FLOAT,
     move_time_goal FLOAT,
     exercise_minutes FLOAT,
