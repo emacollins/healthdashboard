@@ -13,7 +13,7 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 
 # Create a formatter
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 # Add formatter to handler
 handler.setFormatter(formatter)
@@ -21,22 +21,19 @@ handler.setFormatter(formatter)
 # Add handler to logger
 logger.addHandler(handler)
 
-def transform_summary(summary_df: pd.DataFrame, username: str) -> pd.DataFrame:
-    """Transform the summary data
+
+def parse_category(activity_type: str) -> str:
+    """Assigns category for the activity type
 
     Args:
-        summary_df (pd.DataFrame): Summary data
-        username (str): Username of data owner
+        activity_type (str): Activity type in raw data
 
     Returns:
-        pd.DataFrame: Transformed summary data
+        str: category of the activity
     """
-    df = summary_df.copy()
-    df["username"] = username
-    column_rename_map = constants.summary_column_rename_map
-    df = df[list(column_rename_map.keys())]
-    df = df.rename(columns=column_rename_map)
-    return df
+    for key in constants.type_prefixes:
+        if key in activity_type:
+            return key
 
 
 def parse_device_string(device_string: str) -> dict:
@@ -62,6 +59,7 @@ def parse_device_string(device_string: str) -> dict:
         device_dict[key] = value
     return device_dict
 
+
 def process_sleep_data(record_df: pd.DataFrame) -> pd.DataFrame:
     """Process sleep data
 
@@ -85,15 +83,37 @@ def process_sleep_data(record_df: pd.DataFrame) -> pd.DataFrame:
     df_sleep["endDate"] = pd.to_datetime(df_sleep["endDate"])
 
     # The value of sleep records is calculated as duration in minutes
-    df_sleep["value"] = (df_sleep["endDate"] - df_sleep["startDate"]).dt.total_seconds() / 60
+    df_sleep["value"] = (
+        df_sleep["endDate"] - df_sleep["startDate"]
+    ).dt.total_seconds() / 60
     df_sleep["unit"] = "min"
 
     df = pd.concat([df_record, df_sleep])
 
     return df
 
-def transform_fact_table(fact_table: pd.DataFrame, username: str) -> pd.DataFrame:
+
+def transform_summary(summary_df: pd.DataFrame) -> pd.DataFrame:
+    """Transform the summary data
+
+    Args:
+        summary_df (pd.DataFrame): Summary data
+        username (str): Username of data owner
+
+    Returns:
+        pd.DataFrame: Transformed summary data
+    """
+    df = summary_df.copy()
+    column_rename_map = constants.summary_column_rename_map
+    df = df[list(column_rename_map.keys())]
+    df = df.rename(columns=column_rename_map)
+    return df
+
+
+def transform_fact_table(fact_table: pd.DataFrame) -> pd.DataFrame:
     """Transform the fact table
+
+    This goes through a series of data cleaning and parsing
 
     Args:
         fact_table (pd.DataFrame): Fact table
@@ -102,44 +122,37 @@ def transform_fact_table(fact_table: pd.DataFrame, username: str) -> pd.DataFram
         pd.DataFrame: Transformed fact table
     """
     df = fact_table.copy()
-    df["username"] = username
 
     # Apply function to the 'device' column to unpack key value pairs
     df = df.join(pd.json_normalize(df["device"].apply(parse_device_string)))
 
-    # Rename columns
+    # Rename columns to match database table columnn names
     df = df[list(constants.fact_table_column_rename_map.keys())].rename(
         columns=constants.fact_table_column_rename_map
     )
 
-    def parse_category(activity_type: str) -> str:
-        for key in constants.type_prefixes:
-            if key in activity_type:
-                return key
-    
-    df["category_prefix"] = df["activity_type_name"].apply(parse_category)
+    # These steps clean up the activity_type_name and create a new column
+    # to indicate the category of the activity
 
+    df["category_prefix"] = df["activity_type_name"].apply(parse_category)
     df["activity_category"] = df["category_prefix"].apply(
         lambda x: constants.type_prefixes.get(x, "other")
     )
-
     df["activity_type_name"] = df["activity_type_name"].str.replace(
         "|".join(list(constants.type_prefixes.keys())), "", regex=True
     )
 
+    # Filter out records that are not useful
     df = df.loc[df["category_prefix"].isin(constants.type_prefixes.keys())]
-
     df = df.loc[df["activity_category"] != "other"]
-
     df = df.loc[~df["activity_type_name"].isin(constants.activity_types_to_drop)]
 
-    # Edge case, each hour of standing is a separate record
-    df.loc[df["activity_type_name"] == "AppleStandHour", "value"] = 1.
+    # *Edge case, each hour of standing is a separate record*
+    df.loc[df["activity_type_name"] == "AppleStandHour", "value"] = 1.0
     df.loc[df["activity_type_name"] == "AppleStandHour", "unit_name"] = "hr"
 
-    # Edge case, sleep analysis is a separate record
-    df.loc[df["activity_type_name"] == "SleepAnalysis", "activity_category"] = "sleep"
-
+    df["value"] = pd.to_numeric(df["value"], errors="coerce")
+    df = df.loc[~df["value"].isna()]
     return df
 
 
@@ -147,12 +160,12 @@ def main(
     record_input_path: str,
     workout_input_path: str,
     summary_input_path: str,
+    output_directory: str,
     username: str,
     email: str,
 ) -> None:
     """Main function to run the transform process"""
 
-    summary_output_path = summary_input_path.replace("extract", "transform")
     # Load the data
     record_df = pd.read_csv(record_input_path)
     workout_df = pd.read_csv(workout_input_path)
@@ -163,15 +176,26 @@ def main(
     record_df = process_sleep_data(record_df)
     logger.info("Sleep data processed successfully")
 
+    # Transform and clean final fact table
     fact_table = pd.concat(
         [record_df, workout_df.rename(columns=constants.workout_column_rename_map)]
     )
-
-    fact_table = transform_fact_table(fact_table, username)
+    fact_table = transform_fact_table(fact_table)
+    fact_table["username"] = username
+    fact_table["email"] = email
     logger.info("Fact table transformed successfully")
 
+    # Summary data is done separately, as it is a different process
+    summary_df = transform_summary(summary_df)
+    summary_df["username"] = username
+    logger.info("Summary data transformed successfully")
 
-    summary_df_final = transform_summary(summary_df, username)
+    # Save the data
+    if output_directory[-1]=="/":
+        output_directory = output_directory[:-1]
+    fact_table.to_csv(f"{output_directory}/fact_table.csv.gz", index=False, compression="gzip")
+    summary_df.to_csv(f"{output_directory}/summary_table.csv.gz", index=False, compression="gzip")
+    logger.info("Data saved successfully")
 
 
 if __name__ == "__main__":
@@ -187,6 +211,9 @@ if __name__ == "__main__":
         type=str,
         help='Path to "exportActivitySummary" CSV file',
     )
+    # All files are expected to be output in the same directory
+    parser.add_argument("--output_directory", type=str, help="Output directory path")
+
     parser.add_argument("--username", type=str, help="Username of data owner")
     parser.add_argument("--email", type=str, help="Data owner email")
     args = parser.parse_args()
@@ -194,6 +221,7 @@ if __name__ == "__main__":
         args.record_input_path,
         args.workout_input_path,
         args.summary_input_path,
+        args.output_directory,
         args.username,
         args.email,
     )

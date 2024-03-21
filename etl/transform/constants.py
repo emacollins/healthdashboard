@@ -18,7 +18,6 @@ workout_column_rename_map = {
 }
 
 fact_table_column_rename_map = {
-    "username": "username",
     "type": "activity_type_name",
     "unit": "unit_name",
     "sourceName": "source_name",
@@ -41,3 +40,20 @@ type_prefixes = {
 }
 
 activity_types_to_drop = ["LowHeartRateEvent", "HeadphoneAudioExposureEvent"]
+
+fact_table_final_columns = [
+    "username",
+    "activity_category",
+    "activity_type_name",
+    "unit_name",
+    "source_name",
+    "creation_ts",
+    "start_ts",
+    "end_ts",
+    "value",
+    "device_name",
+    "device_manufacturer",
+    "device_model",
+    "device_hardware",
+    "device_software",
+]
