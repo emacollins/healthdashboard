@@ -4,9 +4,8 @@
 -- Create the user_table with a named unique constraint on the email field
 CREATE TABLE user_table (
     id SERIAL PRIMARY KEY,
-    username TEXT NOT NULL,
-    email TEXT NOT NULL,
-    CONSTRAINT unique_user UNIQUE (username, email)
+    username TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE
 );
 
 -- Create the activity_type_table
