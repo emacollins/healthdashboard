@@ -22,9 +22,9 @@ fact_table_column_rename_map = {
     "type": "activity_type_name",
     "unit": "unit_name",
     "sourceName": "source_name",
-    "creationDate": "creation_date",
-    "startDate": "start_date",
-    "endDate": "end_date",
+    "creationDate": "creation_ts",
+    "startDate": "start_ts",
+    "endDate": "end_ts",
     "value": "value",
     "name": "device_name",
     "manufacturer": "device_manufacturer",
@@ -37,6 +37,7 @@ type_prefixes = {
     "HKCategoryTypeIdentifier": "category",
     "HKQuantityTypeIdentifier": "quantity",
     "HKWorkoutActivityType": "workout",
+    "HKCategoryValueSleepAnalysis": "sleep",
 }
 
 activity_types_to_drop = ["LowHeartRateEvent", "HeadphoneAudioExposureEvent"]

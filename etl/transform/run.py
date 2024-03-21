@@ -2,6 +2,24 @@ import pandas as pd
 import constants
 import argparse
 
+import logging
+
+# Set up logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Create a console handler and set level to info
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+
+# Create a formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# Add formatter to handler
+handler.setFormatter(formatter)
+
+# Add handler to logger
+logger.addHandler(handler)
 
 def transform_summary(summary_df: pd.DataFrame, username: str) -> pd.DataFrame:
     """Transform the summary data
@@ -44,6 +62,35 @@ def parse_device_string(device_string: str) -> dict:
         device_dict[key] = value
     return device_dict
 
+def process_sleep_data(record_df: pd.DataFrame) -> pd.DataFrame:
+    """Process sleep data
+
+    The sleep data provided is categorical and needs to be
+    converted to quantify the duration of sleep.
+
+    Args:
+        record_df (pd.DataFrame): Record data
+
+    Returns:
+        pd.DataFrame: Processed record data to fix sleep
+    """
+    df = record_df.copy()
+
+    # Split the data into sleep and other records, to combine at the end
+    df_record = df.loc[df["type"] != "HKCategoryTypeIdentifierSleepAnalysis"]
+    df_sleep = df.loc[df["type"] == "HKCategoryTypeIdentifierSleepAnalysis"]
+
+    df_sleep = df_sleep.drop(columns=["type"]).rename(columns={"value": "type"})
+    df_sleep["startDate"] = pd.to_datetime(df_sleep["startDate"])
+    df_sleep["endDate"] = pd.to_datetime(df_sleep["endDate"])
+
+    # The value of sleep records is calculated as duration in minutes
+    df_sleep["value"] = (df_sleep["endDate"] - df_sleep["startDate"]).dt.total_seconds() / 60
+    df_sleep["unit"] = "min"
+
+    df = pd.concat([df_record, df_sleep])
+
+    return df
 
 def transform_fact_table(fact_table: pd.DataFrame, username: str) -> pd.DataFrame:
     """Transform the fact table
@@ -80,7 +127,7 @@ def transform_fact_table(fact_table: pd.DataFrame, username: str) -> pd.DataFram
         "|".join(list(constants.type_prefixes.keys())), "", regex=True
     )
 
-    df = df.loc[~df["category_prefix"].isin(constants.type_prefixes.keys())]
+    df = df.loc[df["category_prefix"].isin(constants.type_prefixes.keys())]
 
     df = df.loc[df["activity_category"] != "other"]
 
@@ -89,6 +136,9 @@ def transform_fact_table(fact_table: pd.DataFrame, username: str) -> pd.DataFram
     # Edge case, each hour of standing is a separate record
     df.loc[df["activity_type_name"] == "AppleStandHour", "value"] = 1.
     df.loc[df["activity_type_name"] == "AppleStandHour", "unit_name"] = "hr"
+
+    # Edge case, sleep analysis is a separate record
+    df.loc[df["activity_type_name"] == "SleepAnalysis", "activity_category"] = "sleep"
 
     return df
 
@@ -107,12 +157,19 @@ def main(
     record_df = pd.read_csv(record_input_path)
     workout_df = pd.read_csv(workout_input_path)
     summary_df = pd.read_csv(summary_input_path)
+    logger.info("Data loaded successfully")
+
+    # Fix sleep data in record_df
+    record_df = process_sleep_data(record_df)
+    logger.info("Sleep data processed successfully")
 
     fact_table = pd.concat(
         [record_df, workout_df.rename(columns=constants.workout_column_rename_map)]
     )
 
     fact_table = transform_fact_table(fact_table, username)
+    logger.info("Fact table transformed successfully")
+
 
     summary_df_final = transform_summary(summary_df, username)
 
