@@ -193,7 +193,7 @@ def main(
     # Save the data
     if output_directory[-1]=="/":
         output_directory = output_directory[:-1]
-    fact_table.to_csv(f"{output_directory}/fact_table.csv.gz", index=False, compression="gzip")
+    fact_table[constants.fact_table_final_columns].to_csv(f"{output_directory}/fact_table.csv.gz", index=False, compression="gzip")
     summary_df.to_csv(f"{output_directory}/summary_table.csv.gz", index=False, compression="gzip")
     logger.info("Data saved successfully")
 
