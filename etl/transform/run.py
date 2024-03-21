@@ -230,25 +230,25 @@ def load_data(
     if record_input_path.startswith("s3://"):
         s3 = boto3.client("s3")
         bucket, key = parse_s3_uri(record_input_path)
-        record_df = pd.read_csv(s3.get_object(Bucket=bucket, Key=key)["Body"])
+        record_df = pd.read_csv(s3.get_object(Bucket=bucket, Key=key)["Body"], compression="gzip")
     else:
-        record_df = pd.read_csv(record_input_path)
+        record_df = pd.read_csv(record_input_path, compression="gzip")
 
     if workout_input_path.startswith("s3://"):
         s3 = boto3.client("s3")
         bucket, key = parse_s3_uri(workout_input_path)
-        workout_df = pd.read_csv(s3.get_object(Bucket=bucket, Key=key)["Body"])
+        workout_df = pd.read_csv(s3.get_object(Bucket=bucket, Key=key)["Body"], compression="gzip")
     else:
-        workout_df = pd.read_csv(workout_input_path)
+        workout_df = pd.read_csv(workout_input_path, compression="gzip")
 
     if summary_input_path.startswith("s3://"):
         s3 = boto3.client("s3")
         bucket, key = parse_s3_uri(summary_input_path)
         summary_df = pd.read_csv(
-            s3.get_object(Bucket=bucket, Key=key)["Body"]
+            s3.get_object(Bucket=bucket, Key=key)["Body"], compression="gzip"
         )
     else:
-        summary_df = pd.read_csv(summary_input_path)
+        summary_df = pd.read_csv(summary_input_path, compression="gzip")
     
     return record_df, workout_df, summary_df
 

@@ -84,6 +84,7 @@ def main(input_path: str) -> None:
 
     The extract process takes the zip file exported from Apple
     Health and process the XML file to get tabular health data.
+    The output file is a gzip compressed CSV file.
 
     Args:
         input_path (str): Path to zip file (can be S3 URI)
@@ -94,8 +95,8 @@ def main(input_path: str) -> None:
         data = get_data(data_file_path)
         for tag, df in data.items():
             output_path = input_path.replace('harvest', 'extract')
-            output_path = os.path.splitext(output_path)[0] + tag + '.csv'
-            df.to_csv(output_path, index=False)
+            output_path = os.path.splitext(output_path)[0] + tag + '.csv.gz'
+            df.to_csv(output_path, index=False, compression='gzip')
             logger.info(f"Data written to: {output_path}")
         logger.info("Extract process completed")
     finally:
