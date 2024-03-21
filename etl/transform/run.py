@@ -1,8 +1,10 @@
 import pandas as pd
 import constants
 import argparse
+import boto3
 
 import logging
+import re
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -156,6 +158,127 @@ def transform_fact_table(fact_table: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def process_fact_table(
+    record_df: pd.DataFrame, workout_df: pd.DataFrame, username, email
+) -> pd.DataFrame:
+    """Process the fact table
+
+    Args:
+        record_df (pd.DataFrame): Data from the "exportRecord" CSV file
+        workout_df (pd.DataFrame): Data from the "exportWorkout" CSV file
+        username (_type_): username of data owner
+        email (_type_): email of data owner
+
+    Returns:
+        pd.DataFrame: Final fact table
+    """
+    df = pd.concat(
+        [record_df, workout_df.rename(columns=constants.workout_column_rename_map)]
+    )
+    df = transform_fact_table(df)
+    df["username"] = username
+    df["email"] = email
+    return df[constants.fact_table_final_columns]
+
+
+def process_summary_table(summary_df: pd.DataFrame, username: str) -> pd.DataFrame:
+    """Process the summary table
+
+    Args:
+        summary_df (pd.DataFrame): Data from the "exportActivitySummary" CSV file
+        username (str): username of data owner
+
+    Returns:
+        pd.DataFrame: Final summary table
+    """
+    df = summary_df.copy()
+    df = transform_summary(df)
+    df["username"] = username
+    return df
+
+
+def parse_s3_uri(s3_uri: str) -> tuple:
+    """Parse S3 URI to bucket and key
+
+    Args:
+        s3_uri (str): S3 URI
+
+    Returns:
+        tuple: Bucket and key
+    """
+    pattern = r"s3://([^/]+)/(.+)"
+    match = re.match(pattern, s3_uri)
+    if match:
+        bucket = match.group(1)
+        key = match.group(2)
+        return bucket, key
+    else:
+        raise ValueError("Invalid S3 URI format")
+
+
+def load_data(
+    record_input_path: str, workout_input_path: str, summary_input_path: str
+) -> pd.DataFrame:
+    """Load the data from the input path
+
+    Args:
+        input_path (str): Path to the input file
+
+    Returns:
+        (pd.DataFrame, pd.DataFrame, pd.Datafrane): record_data, workout_data, summary_data
+    """
+    if record_input_path.startswith("s3://"):
+        s3 = boto3.client("s3")
+        bucket, key = parse_s3_uri(record_input_path)
+        record_df = pd.read_csv(s3.get_object(Bucket=bucket, Key=key)["Body"])
+    else:
+        record_df = pd.read_csv(record_input_path)
+
+    if workout_input_path.startswith("s3://"):
+        s3 = boto3.client("s3")
+        bucket, key = parse_s3_uri(workout_input_path)
+        workout_df = pd.read_csv(s3.get_object(Bucket=bucket, Key=key)["Body"])
+    else:
+        workout_df = pd.read_csv(workout_input_path)
+
+    if summary_input_path.startswith("s3://"):
+        s3 = boto3.client("s3")
+        bucket, key = parse_s3_uri(summary_input_path)
+        summary_df = pd.read_csv(
+            s3.get_object(Bucket=bucket, Key=key)["Body"]
+        )
+    else:
+        summary_df = pd.read_csv(summary_input_path)
+    
+    return record_df, workout_df, summary_df
+
+def output_data(fact_table: pd.DataFrame, summary_table: pd.DataFrame, output_directory: str, username: str) -> None:
+    """Outputs compressed CSVs to the output path
+
+    Args:
+        fact_table (pd.DataFrame): DF of the fact table
+        summary_table (pd.DataFrame): DF of the summary table
+        output_directory (str): Directory to output both tables to
+        username (str): Username of data owner
+    """
+    if output_directory[-1] == "/":
+        output_directory = output_directory[:-1]
+    try:
+        fact_table.to_csv(
+            f"{output_directory}/{constants.FACT_TABLE_FILENAME}",
+            index=False,
+            compression="gzip",
+        )
+        summary_table.to_csv(
+            f"{output_directory}/{constants.SUMMARY_TABLE_FILENAME}",
+            index=False,
+            compression="gzip",
+        )
+        logger.info("Data saved successfully")
+    except Exception as e:
+        logger.error(f"Failed to save data for user {username}: {str(e)}")
+
+
 def main(
     record_input_path: str,
     workout_input_path: str,
@@ -167,9 +290,9 @@ def main(
     """Main function to run the transform process"""
 
     # Load the data
-    record_df = pd.read_csv(record_input_path)
-    workout_df = pd.read_csv(workout_input_path)
-    summary_df = pd.read_csv(summary_input_path)
+    record_df, workout_df, summary_df = load_data(
+        record_input_path, workout_input_path, summary_input_path
+    )
     logger.info("Data loaded successfully")
 
     # Fix sleep data in record_df
@@ -177,42 +300,40 @@ def main(
     logger.info("Sleep data processed successfully")
 
     # Transform and clean final fact table
-    fact_table = pd.concat(
-        [record_df, workout_df.rename(columns=constants.workout_column_rename_map)]
-    )
-    fact_table = transform_fact_table(fact_table)
-    fact_table["username"] = username
-    fact_table["email"] = email
+    fact_table = process_fact_table(record_df, workout_df, username, email)
     logger.info("Fact table transformed successfully")
 
     # Summary data is done separately, as it is a different process
-    summary_df = transform_summary(summary_df)
-    summary_df["username"] = username
+    summary_table = process_summary_table(summary_df, username)
     logger.info("Summary data transformed successfully")
 
     # Save the data
-    if output_directory[-1]=="/":
-        output_directory = output_directory[:-1]
-    fact_table[constants.fact_table_final_columns].to_csv(f"{output_directory}/fact_table.csv.gz", index=False, compression="gzip")
-    summary_df.to_csv(f"{output_directory}/summary_table.csv.gz", index=False, compression="gzip")
-    logger.info("Data saved successfully")
+    output_data(fact_table, summary_table, output_directory, username)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Health Dashboard Transform Process")
     parser.add_argument(
-        "--record_input_path", type=str, help='Path to "exportRecord" CSV file'
+        "--record_input_path",
+        type=str,
+        help='Path to "exportRecord" CSV file. Can be s3 URI or local path.',
     )
     parser.add_argument(
-        "--workout_input_path", type=str, help='Path to "exportWorkout" CSV file'
+        "--workout_input_path",
+        type=str,
+        help='Path to "exportWorkout" CSV file. Can be s3 URI or local path.',
     )
     parser.add_argument(
         "--summary_input_path",
         type=str,
-        help='Path to "exportActivitySummary" CSV file',
+        help='Path to "exportActivitySummary" CSV file. Can be S3 URI or local path.',
     )
     # All files are expected to be output in the same directory
-    parser.add_argument("--output_directory", type=str, help="Output directory path")
+    parser.add_argument(
+        "--output_directory",
+        type=str,
+        help="Output directory path. Can be S3 URI or local path.",
+    )
 
     parser.add_argument("--username", type=str, help="Username of data owner")
     parser.add_argument("--email", type=str, help="Data owner email")

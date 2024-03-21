@@ -1,3 +1,6 @@
+FACT_TABLE_FILENAME = "fact_table.csv.gz"
+SUMMARY_TABLE_FILENAME = "summary_table.csv.gz"
+
 summary_column_rename_map = {
     "dateComponents": "creation_date",
     "activeEnergyBurned": "active_energy_burned",
