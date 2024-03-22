@@ -213,7 +213,7 @@ def parse_s3_uri(s3_uri: str) -> tuple:
         key = match.group(2)
         return bucket, key
     else:
-        raise ValueError("Invalid S3 URI format")
+        raise ValueError(f"Invalid S3 URI format: {s3_uri}")
 
 
 def load_data(
