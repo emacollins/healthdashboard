@@ -6,6 +6,9 @@ import logging
 
 import constants
 
+from typing import Dict, Tuple, List
+
+
 # Set up logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -24,9 +27,12 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 class DataLoader():
-    def __init__(self, fact_tables, environment):
+    def __init__(self, fact_tables: Dict[str, pd.DataFrame], environment: str):
+        """Used to load data into the database"""
         self.fact_tables = fact_tables
         self.environment = environment
+
+        
 
     def load(self):
         logger.info("Starting load")
@@ -42,6 +48,7 @@ class DataLoader():
                 pass
             else:
                 logger.warning(f"Unknown table: {table_name}")
+
     def _load_fact_table(self, table: pd.DataFrame) -> None:
         with psycopg2.connect(
             dbname=constants.DATABASE_CONFIG[self.environment]["dbname"],

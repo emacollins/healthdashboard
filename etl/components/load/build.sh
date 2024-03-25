@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define an array of your service names
-services=("healthdashboard/etl/transform")
+services=("healthdashboard/etl/load")
 
 account_number=$(aws sts get-caller-identity --query Account --output text)
 

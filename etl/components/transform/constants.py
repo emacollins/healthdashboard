@@ -46,6 +46,7 @@ activity_types_to_drop = ["LowHeartRateEvent", "HeadphoneAudioExposureEvent"]
 
 fact_table_final_columns = [
     "username",
+    "email",
     "activity_category",
     "activity_type_name",
     "unit_name",
