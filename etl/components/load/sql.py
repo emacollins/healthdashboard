@@ -1,3 +1,8 @@
+COPY_FACT_TABLE = """
+COPY fact_table_temp
+FROM STDIN WITH (FORMAT csv, HEADER false, DELIMITER ',')
+"""
+
 CREATE_TEMP_FACT_TABLE = """
 CREATE TEMP TABLE fact_table_temp (
     username TEXT,
@@ -6,9 +11,9 @@ CREATE TEMP TABLE fact_table_temp (
     activity_type_name TEXT,
     unit_name TEXT,
     source_name TEXT,
-    creation_ts TEXT,
-    start_ts TEXT,
-    end_ts TEXT,
+    creation_ts TIMESTAMPTZ,
+    start_ts TIMESTAMPTZ,
+    end_ts TIMESTAMPTZ,
     value NUMERIC,
     device_name TEXT,
     device_manufacturer TEXT,
@@ -20,7 +25,7 @@ CREATE TEMP TABLE fact_table_temp (
 
 INSERT_ACTIVITY_TYPES = """
 INSERT INTO activity_types (activity_name, category)
-    SELECT DISTINCT activity_name, activity_category
+    SELECT DISTINCT activity_type_name, activity_category
     FROM fact_table_temp
     ON CONFLICT DO NOTHING
 """
@@ -35,6 +40,7 @@ INSERT INTO units (unit_name)
 INSERT_SOURCES = """
 INSERT INTO sources (source_name, device_name, device_manufacturer, device_model, device_hardware, device_software)
     SELECT DISTINCT source_name, device_name, device_manufacturer, device_model, device_hardware, device_software
+    FROM fact_table_temp
     ON CONFLICT DO NOTHING
 """
 

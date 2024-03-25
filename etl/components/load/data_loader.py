@@ -1,10 +1,11 @@
 import psycopg2
 import pandas as pd
 import os
-
+import io
 import logging
 
 import constants
+import sql
 
 from typing import Dict, Tuple, List
 
@@ -41,8 +42,7 @@ class DataLoader():
                 logger.warning(f"Table {table_name} is not a DataFrame")
                 continue
             if table_name == "fact_table":
-                # Code to load table1
-                pass
+                self._load_fact_table(table=table)
             elif table_name == "summary_table":
                 # Code to load table2
                 pass
@@ -57,5 +57,24 @@ class DataLoader():
             host=constants.DATABASE_CONFIG[self.environment]["host"],
             port=constants.DATABASE_CONFIG[self.environment]["port"],
         ) as conn:
-            # TODO: Load the fact table
-            pass
+            
+            cur = conn.cursor()
+
+            # Create a temporary table
+            cur.execute(sql.CREATE_TEMP_FACT_TABLE)
+
+            # Copy the data from the StringIO object into the database
+            cur.copy_expert(sql.COPY_FACT_TABLE, self._read_df_into_memory(table))
+
+            cur.execute(sql.INSERT_ACTIVITY_TYPES)
+            cur.execute(sql.INSERT_UNITS)
+            cur.execute(sql.INSERT_SOURCES)
+            cur.execute(sql.INSERT_USERS)
+            cur.execute(sql.INSERT_FACT_TABLE)
+
+
+    def _read_df_into_memory(self, table: pd.DataFrame) -> object:
+        sio = io.StringIO()
+        sio.write(table.to_csv(index=False, header=False))
+        sio.seek(0)
+        return sio

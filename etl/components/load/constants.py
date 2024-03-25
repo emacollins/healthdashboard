@@ -7,7 +7,7 @@ FACT_TABLES = ["fact_table", "summary_table"]
 DATABASE_CONFIG = {
     "LOCAL": {
         "dbname": "applehealth",
-        "user": "eric",
+        "user": "ericcollins",
         "password": os.environ["DB_PASSWORD"],
         "host": "localhost",
         "port": "5432",

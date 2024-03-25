@@ -85,12 +85,9 @@ def main(fact_table_directory: str, environment: str) -> None:
     fact_tables = get_fact_table_files(fact_table_directory)
     logger.info(f"Fact Tables to be loaded: {fact_tables.keys()}")
 
-
     loader = DataLoader(fact_tables, environment)
     loader.load()
     
-    
-
     logger.info("Load Process Complete")
 
 
@@ -102,9 +99,9 @@ if __name__ == "__main__":
         help="Path to the directory containing the fact tables Can be local directory or S3 URI",
     )
     parser.add_argument(
-        "--environement",
+        "--environment",
         type=str,
         help="Environment to run the process in. DEV or PROD",
     )
     args = parser.parse_args()
-    main(args.fact_table_director, args.environment)
+    main(args.fact_table_directory, args.environment)
