@@ -79,11 +79,11 @@ def main(fact_table_directory: str, environment: str) -> None:
         logger.error(f"Unknown environment: {environment}")
         assert 1 == 0
 
-    logger.info(f"Starting Load Process: {fact_table_directory}")
+    logger.info(f"Starting Load Service: {fact_table_directory}")
 
     #All fact tables and their names in format: {table_name: pd.DataFrame, ...}
     fact_tables = get_fact_table_files(fact_table_directory)
-    logger.info(f"Fact Tables to be loaded: {fact_tables.keys()}")
+    logger.info(f"Fact Tables to be loaded: {', '.join(fact_tables.keys())}")
 
     loader = DataLoader(fact_tables, environment)
     loader.load()
