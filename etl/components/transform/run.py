@@ -110,7 +110,11 @@ def transform_summary(summary_df: pd.DataFrame) -> pd.DataFrame:
     df = df[list(column_rename_map.keys())]
     df = df.rename(columns=column_rename_map)
 
-    # TODO - Drop the latest creation data since data may have been harvested midday
+    # Exported data may have been done midday, thus the latest date will not contian all information
+    df["creation_date"] = pd.to_datetime(df["creation_date"])
+    df = df.sort_values("creation_date")
+    df = df.iloc[:-1]
+
     return df
 
 
