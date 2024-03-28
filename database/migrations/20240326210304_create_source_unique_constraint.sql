@@ -1,2 +1,2 @@
 -- Add migration script here
--- TODO: CREATE A UNIQUE CONSTRAINT ON THE SOURCES TABLE, FOUND DUPLICATE RECORDS
+ALTER TABLE sources ADD CONSTRAINT unique_source UNIQUE (source_name, device_name, device_manufacturer, device_model, device_hardware, device_software);

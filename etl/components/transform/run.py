@@ -109,6 +109,8 @@ def transform_summary(summary_df: pd.DataFrame) -> pd.DataFrame:
     column_rename_map = constants.summary_column_rename_map
     df = df[list(column_rename_map.keys())]
     df = df.rename(columns=column_rename_map)
+
+    # TODO - Drop the latest creation data since data may have been harvested midday
     return df
 
 
