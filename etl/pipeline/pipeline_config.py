@@ -15,4 +15,11 @@ TASK_CONFIG = {
         "launch_type": os.environ["LAUNCH_TYPE"],
         "max_run_time": 300 # seconds
     },
+    "LOAD": {
+        "cluster_name": os.environ["CLUSTER_NAME"],
+        "task_definition": os.environ["LOAD_TASK_DEFINITION"],
+        "region_name": os.environ["REGION_NAME"],
+        "launch_type": os.environ["LAUNCH_TYPE"],
+        "max_run_time": 600 # seconds
+    }
 }

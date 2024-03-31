@@ -1,5 +1,6 @@
 import time
 import boto3
+import botocore.exceptions
 
 
 class ECSTask:
@@ -11,6 +12,7 @@ class ECSTask:
         region_name: str,
         launch_type: str,
         max_run_time: int,
+        poll_time: int = 10,
     ):
         """
         A utility class for running and monitoring ECS tasks.
@@ -22,6 +24,7 @@ class ECSTask:
             region_name (str): The AWS region name.
             launch_type (str): The launch type for the task.
             max_run_time (int): The maximum run time for the task in seconds.
+            poll_time (int): The interval in seconds between task status checks.
 
         Attributes:
             poll_time (int): The interval in seconds between task status checks.
@@ -29,12 +32,12 @@ class ECSTask:
             task_args (list): The arguments to pass to the task.
             cluster_name (str): The name of the ECS cluster.
             task_definition (str): The ARN of the task definition.
-            launch_type (str): The launch type for the task.
+            launch_type (str): The launch type for the task. Generally FARGATE or EC2.
             max_run_time (int): The maximum run time for the task in seconds.
             ecs_client (boto3.client): The ECS client.
 
         """
-        self.poll_time = 10  # in units of seconds
+        self.poll_time = poll_time  # in units of seconds
         self.elapsed_run_time = 0
 
         self.task_args = task_args
@@ -42,16 +45,27 @@ class ECSTask:
         self.task_definition = task_definition
         self.launch_type = launch_type
         self.max_run_time = max_run_time
-        self.ecs_client = boto3.client("ecs", region_name=region_name)
+        try:
+            self.ecs_client = boto3.client("ecs", region_name=region_name)
+        except botocore.exceptions.NoCredentialsError:
+            print("No AWS credentials found.")
+            raise
+        except botocore.exceptions.BotoCoreError as e:
+            print(f"Error initializing boto3 ECS client: {e}")
+            raise
 
     def run(self):
         """Given task definition, runs the ECS task and waits for it to complete."""
-        response = self.ecs_client.run_task(
-            cluster=self.cluster_name,
-            launchType=self.launch_type,  # or 'EC2' depending on your configuration
-            taskDefinition=self.task_definition,
-            count=1,
-        )
+        try:
+            response = self.ecs_client.run_task(
+                cluster=self.cluster_name,
+                launchType=self.launch_type,
+                taskDefinition=self.task_definition,
+                count=1,
+            )
+        except botocore.exceptions.BotoCoreError as e:
+            print(f"Error running task: {e}")
+            raise
 
         # Extract the task ARN
         self.task_arn = response["tasks"][0]["taskArn"]
@@ -59,7 +73,9 @@ class ECSTask:
         return complete, stopped_reason
 
     def _check_if_complete(self):
-        """Check if the ECS task has completed."""
+        """Check if the ECS task has completed.
+        If task status returns STOPPED, return True and the stopped reason.
+        If task times out, stop the task and return False and the reason."""
 
         while True:
             if self.elapsed_run_time > self.max_run_time:
@@ -67,19 +83,25 @@ class ECSTask:
                 self._stop_ecs_task(reason=reason)
                 return False, reason
             # Check the task status
-            response = self.ecs_client.describe_tasks(
-                cluster=self.cluster_name, tasks=[self.task_arn]
-            )
+            try:
+                response = self.ecs_client.describe_tasks(
+                    cluster=self.cluster_name,
+                    tasks=[self.task_arn],
+                )
+            except botocore.exceptions.BotoCoreError as e:
+                print(f"Error describing task: {e}")
+                raise
+
             task_status = response["tasks"][0]["lastStatus"]
             if task_status == "STOPPED":
                 stopped_reason = response["tasks"][0]["stoppedReason"]
                 return True, stopped_reason
 
             time.sleep(self.poll_time)  # Poll every 10 seconds. Adjust as necessary.
-            self.elapsed_time = self.elapsed_run_time + self.poll_time
+            self.elapsed_run_time = self.elapsed_run_time + self.poll_time
 
     def _stop_ecs_task(self, reason):
-        response = self.ecs_client.stop_task(
+        """Stop the ECS task with the given reason."""
+        self.ecs_client.stop_task(
             cluster=self.cluster_name, task=self.task_arn, reason=reason
         )
-        return response
