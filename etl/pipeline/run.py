@@ -4,49 +4,50 @@ import os
 
 import pipeline_utils as utils
 import pipeline_config as config
-from dotenv import load_dotenv
 
-# Load .env file if it exists
-dotenv_path = os.path.join(os.path.dirname(__file__), ".env")
-if os.path.exists(dotenv_path):
-    load_dotenv(dotenv_path)
+import logging
+
+# Set up logger
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+# Create a console handler and set level to info
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+
+# Create a formatter
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
+# Add formatter to handler
+handler.setFormatter(formatter)
+
+# Add handler to logger
+logger.addHandler(handler)
+
+
+def create_task(task_config):
+    return utils.ECSTask(
+        cluster_name=task_config["cluster_name"],
+        task_definition=task_config["task_definition"],
+        task_args=[],
+        region_name=task_config["region_name"],
+        launch_type=task_config["launch_type"],
+        max_run_time=task_config["max_run_time"],
+    )
 
 
 def main():
     # Define your tasks in the order they need to be executed
+    tasks = ["EXTRACT", "TRANSFORM", "LOAD"]
+    task_objects = {task: create_task(config.TASK_CONFIG[task]) for task in tasks}
 
-    EXTRACT_TASK = utils.ECSTask(
-        cluster_name=config.TASK_CONFIG["EXTRACT"]["cluster_name"],
-        task_definition=config.TASK_CONFIG["EXTRACT"]["task_definition"],
-        task_args=[],
-        region_name=config.TASK_CONFIG["EXTRACT"]["region_name"],
-        launch_type=config.TASK_CONFIG["EXTRACT"]["launch_type"],
-        max_run_time=config.TASK_CONFIG["EXTRACT"]["max_run_time"],
-    )
-
-    TRANSFORM_TASK = utils.ECSTask(
-        cluster_name=config.TASK_CONFIG["TRANSFORM"]["cluster_name"],
-        task_definition=config.TASK_CONFIG["TRANSFORM"]["task_definition"],
-        task_args=[],
-        region_name=config.TASK_CONFIG["TRANSFORM"]["region_name"],
-        launch_type=config.TASK_CONFIG["TRANSFORM"]["launch_type"],
-        max_run_time=config.TASK_CONFIG["TRANSFORM"]["max_run_time"],
-    )
-
-    LOAD_TASK = utils.ECSTask(
-        cluster_name=config.TASK_CONFIG["LOAD"]["cluster_name"],
-        task_definition=config.TASK_CONFIG["LOAD"]["task_definition"],
-        task_args=[],
-        region_name=config.TASK_CONFIG["LOAD"]["region_name"],
-        launch_type=config.TASK_CONFIG["LOAD"]["launch_type"],
-        max_run_time=config.TASK_CONFIG["LOAD"]["max_run_time"],
-    )
-    
-    EXTRACT_TASK.run()
-    time.sleep(10)
-    TRANSFORM_TASK.run()
-    time.sleep(10)
-    LOAD_TASK.run()
+    for task in tasks:
+        logger.info(f"Running task: {task}")
+        complete, response = task_objects[task].run()
+        if complete:
+            logger.info(f"{task} task completed: {response}")
+        else:
+            logger.error(f"{task} task failed to complete: {response}")
 
 
 if __name__ == "__main__":
