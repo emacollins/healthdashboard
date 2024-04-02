@@ -26,6 +26,7 @@ class ECSTask:
         self,
         cluster_name: str,
         task_definition: str,
+        container_name: str,
         task_args: list,
         region_name: str,
         launch_type: str,
@@ -58,11 +59,14 @@ class ECSTask:
         self.poll_time = poll_time  # in units of seconds
         self.elapsed_run_time = 0
 
-        self.task_args = task_args
+        self.container_name = container_name
         self.cluster_name = cluster_name
         self.task_definition = task_definition
         self.launch_type = launch_type
         self.max_run_time = max_run_time
+
+        self.task_args = [f"{key} {value}" for key, value in task_args.items()]
+
         try:
             self.ecs_client = boto3.client("ecs", region_name=region_name)
         except botocore.exceptions.NoCredentialsError:
@@ -71,6 +75,8 @@ class ECSTask:
         except botocore.exceptions.BotoCoreError as e:
             print(f"Error initializing boto3 ECS client: {e}")
             raise
+        
+        
 
     def run(self):
         """Given task definition, runs the ECS task and waits for it to complete."""
@@ -80,6 +86,11 @@ class ECSTask:
                 launchType=self.launch_type,
                 taskDefinition=self.task_definition,
                 count=1,
+                overrides={
+                    "containerOverrides": [
+                        {"name": self.container_name, "command": self.task_args},
+                    ]
+                },
             )
         except botocore.exceptions.BotoCoreError as e:
             print(f"Error running task: {e}")

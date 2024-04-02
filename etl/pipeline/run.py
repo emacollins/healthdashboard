@@ -1,7 +1,3 @@
-import boto3
-import time
-import os
-
 import pipeline_utils as utils
 import pipeline_config as config
 
@@ -29,7 +25,7 @@ def create_task(task_config):
     return utils.ECSTask(
         cluster_name=task_config["cluster_name"],
         task_definition=task_config["task_definition"],
-        task_args=[],
+        task_args=task_config["task_args"],
         region_name=task_config["region_name"],
         launch_type=task_config["launch_type"],
         max_run_time=task_config["max_run_time"],
