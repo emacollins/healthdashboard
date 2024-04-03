@@ -14,6 +14,3 @@ CREATE ROLE eric WITH LOGIN PASSWORD 'XXXXXXX';
 
 -- 3. Grant Privileges to the Role on the Database
 GRANT ALL PRIVILEGES ON DATABASE applehealth TO eric;
-
--- 4. Grant privileges on the table to your new role
-GRANT ALL PRIVILEGES ON TABLE example_table TO eric;

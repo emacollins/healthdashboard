@@ -9,7 +9,7 @@ DATABASE_CONFIG = {
         "dbname": "applehealth",
         "user": "ericcollins",
         "password": os.environ.get("DB_PASSWORD"),
-        "host": "localhost",
+        "host": "host.docker.internal",
         "port": "5432",
     },
     "DEV": {
