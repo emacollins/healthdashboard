@@ -25,9 +25,12 @@ def create_task(task_config):
     return utils.ECSTask(
         cluster_name=task_config["cluster_name"],
         task_definition=task_config["task_definition"],
-        task_args=task_config["task_args"],
+        container_name=task_config["container_name"],
+        task_args=task_config["args"],
         region_name=task_config["region_name"],
         launch_type=task_config["launch_type"],
+        subnets=task_config["subnets"],
+        security_group=task_config["security_group"],
         max_run_time=task_config["max_run_time"],
     )
 

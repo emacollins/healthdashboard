@@ -1,6 +1,6 @@
 FROM python:3.11-slim-bullseye
 
-WORKDIR /healthdashboard/etl/components/load
+WORKDIR /healthdashboard/etl/load
 
 COPY . .
 

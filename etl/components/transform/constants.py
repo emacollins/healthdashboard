@@ -56,4 +56,8 @@ fact_table_final_columns = [
     "end_ts",
     "value",
     "device_name",
+    "device_manufacturer",
+    "device_model",
+    "device_hardware",
+    "device_software"
 ]

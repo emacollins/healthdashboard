@@ -15,6 +15,8 @@ TASK_CONFIG = {
         "container_name": os.environ["EXTRACT_CONTAINER_NAME"],
         "region_name": os.environ["REGION_NAME"],
         "launch_type": os.environ["LAUNCH_TYPE"],
+        "subnets": [os.environ["SUBNET_1"], os.environ["SUBNET_2"]],
+        "security_group": [os.environ["SECURITY_GROUP"]],
         "max_run_time": 300 # seconds
     },
     "TRANSFORM": {
@@ -29,6 +31,8 @@ TASK_CONFIG = {
         "container_name": os.environ["TRANSFORM_CONTAINER_NAME"],
         "region_name":  os.environ["REGION_NAME"],
         "launch_type": os.environ["LAUNCH_TYPE"],
+        "subnets": [os.environ["SUBNET_1"], os.environ["SUBNET_2"]],
+        "security_group":[os.environ["SECURITY_GROUP"]],
         "max_run_time": 300 # seconds
     },
     "LOAD": {
@@ -39,6 +43,8 @@ TASK_CONFIG = {
         "container_name": os.environ["LOAD_CONTAINER_NAME"],
         "region_name": os.environ["REGION_NAME"],
         "launch_type": os.environ["LAUNCH_TYPE"],
+        "subnets": [os.environ["SUBNET_1"], os.environ["SUBNET_2"]],
+        "security_group": [os.environ["SECURITY_GROUP"]],
         "max_run_time": 600 # seconds
     }
 }

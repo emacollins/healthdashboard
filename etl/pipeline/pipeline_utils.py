@@ -3,6 +3,8 @@ import boto3
 import botocore.exceptions
 import logging
 
+from typing import List
+
 # Set up logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -27,8 +29,10 @@ class ECSTask:
         cluster_name: str,
         task_definition: str,
         container_name: str,
-        task_args: list,
+        task_args: List[str],
         region_name: str,
+        subnets: List[str],
+        security_group: List[str],
         launch_type: str,
         max_run_time: int,
         poll_time: int = 10,
@@ -63,9 +67,14 @@ class ECSTask:
         self.cluster_name = cluster_name
         self.task_definition = task_definition
         self.launch_type = launch_type
+        self.subnets = subnets
+        self.security_group = security_group
         self.max_run_time = max_run_time
 
-        self.task_args = [f"{key} {value}" for key, value in task_args.items()]
+        self.task_args = []
+        for key, value in task_args.items():
+            self.task_args.append(key)
+            self.task_args.append(value)
 
         try:
             self.ecs_client = boto3.client("ecs", region_name=region_name)
@@ -75,8 +84,6 @@ class ECSTask:
         except botocore.exceptions.BotoCoreError as e:
             print(f"Error initializing boto3 ECS client: {e}")
             raise
-        
-        
 
     def run(self):
         """Given task definition, runs the ECS task and waits for it to complete."""
@@ -86,6 +93,13 @@ class ECSTask:
                 launchType=self.launch_type,
                 taskDefinition=self.task_definition,
                 count=1,
+                networkConfiguration={
+                    "awsvpcConfiguration": {
+                        "subnets": self.subnets,
+                        "securityGroups": self.security_group,
+                        "assignPublicIp": "ENABLED",
+                    }
+                },
                 overrides={
                     "containerOverrides": [
                         {"name": self.container_name, "command": self.task_args},
