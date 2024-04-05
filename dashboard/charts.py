@@ -13,7 +13,7 @@ def query_db(query: str, conn: object, params: tuple = None) -> pd.DataFrame:
         df = pd.DataFrame(data, columns=columns)
     return df
 
-def generate_summary_charts(start_date: str, end_date: str, username: str, conn: object) -> tuple:
+def generate_summary_charts(start_date: str, end_date: str, username: str, conn: object, smooth: bool) -> tuple:
     """Generate summary charts for the given date range and username
 
     Args:
@@ -21,17 +21,19 @@ def generate_summary_charts(start_date: str, end_date: str, username: str, conn:
         end_date (str): End date for the summary
         username (str): Username for the summary
         conn (object): Connection object to the database
+        smooth (bool): Whether to smooth the chart
 
     Returns:
         _type_: _description_
     """
     data = query_db(sql.GET_SUMMARY, conn, (username, start_date, end_date))
-
-
+    data = data.set_index("date")
+    if smooth:
+        data = data.rolling(window=30).mean().dropna()
     
     # Generate the summary charts
-    fig_active_energy = go.Figure(data=go.Scatter(x=data["date"], y=data["active_energy_burned"], mode="lines+markers")).update_layout(title="Active Energy Burned")
-    fig_exercise_minutes = go.Figure(data=go.Scatter(x=data["date"], y=data["exercise_minutes"], mode="lines+markers")).update_layout(title="Exercise Minutes")
-    fig_stand_hours = go.Figure(data=go.Scatter(x=data["date"], y=data["stand_hours"], mode="lines+markers")).update_layout(title="Stand Hours")
+    fig_active_energy = go.Figure(data=go.Scatter(x=data.index, y=data["active_energy_burned"], mode="lines+markers")).update_layout(title="Active Energy Burned")
+    fig_exercise_minutes = go.Figure(data=go.Scatter(x=data.index, y=data["exercise_minutes"], mode="lines+markers")).update_layout(title="Exercise Minutes")
+    fig_stand_hours = go.Figure(data=go.Scatter(x=data.index, y=data["stand_hours"], mode="lines+markers")).update_layout(title="Stand Hours")
     
     return fig_active_energy, fig_exercise_minutes, fig_stand_hours

@@ -32,7 +32,7 @@ app.layout = html.Div(
                 dcc.DatePickerRange(
                     id="DateRange", start_date=dt(2022, 7, 1), end_date=dt(2024, 4, 1)
                 ),
-                dcc.Checklist(id="smoothing", options=[{"label": "Smooth chart", "value": True}]),
+                dcc.Checklist(id="Smoothing", options=[{"label": "Smooth chart", "value": True}]),
             ]
         ),
         html.Div(
@@ -56,13 +56,13 @@ app.layout = html.Div(
     [
         dash.dependencies.Input("DateRange", "start_date"),
         dash.dependencies.Input("DateRange", "end_date"),
-        dash.dependencies.Input("DateRange", "smoothing"),
+        dash.dependencies.Input("Smoothing", "value"),
     ],
 )
 def generate_summary_charts(start_date: dt, end_date: dt, smooth: bool):
     conn = get_conn()
     active_energy, exercise_mins, stand_hrs = charts.generate_summary_charts(
-        start_date, end_date, get_username(), conn
+        start_date, end_date, get_username(), conn, smooth
     )
     return active_energy, exercise_mins, stand_hrs
 
