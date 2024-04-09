@@ -1,7 +1,6 @@
 # Import necessary libraries
 import dash
 from dash import html, dcc
-import plotly.express as px
 import pandas as pd
 import os
 from datetime import datetime as dt
@@ -48,6 +47,7 @@ app.layout = html.Div(
                     id="Smoothing",
                     labelStyle={"display": "flex", "align-items": "center"}
                 ),
+                html.Br(),
             ]
         ),
         html.Div(

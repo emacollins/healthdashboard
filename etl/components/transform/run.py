@@ -236,14 +236,18 @@ def load_data(
     if record_input_path.startswith("s3://"):
         s3 = boto3.client("s3")
         bucket, key = parse_s3_uri(record_input_path)
-        record_df = pd.read_csv(s3.get_object(Bucket=bucket, Key=key)["Body"], compression="gzip")
+        record_df = pd.read_csv(
+            s3.get_object(Bucket=bucket, Key=key)["Body"], compression="gzip"
+        )
     else:
         record_df = pd.read_csv(record_input_path, compression="gzip")
 
     if workout_input_path.startswith("s3://"):
         s3 = boto3.client("s3")
         bucket, key = parse_s3_uri(workout_input_path)
-        workout_df = pd.read_csv(s3.get_object(Bucket=bucket, Key=key)["Body"], compression="gzip")
+        workout_df = pd.read_csv(
+            s3.get_object(Bucket=bucket, Key=key)["Body"], compression="gzip"
+        )
     else:
         workout_df = pd.read_csv(workout_input_path, compression="gzip")
 
@@ -255,10 +259,16 @@ def load_data(
         )
     else:
         summary_df = pd.read_csv(summary_input_path, compression="gzip")
-    
+
     return record_df, workout_df, summary_df
 
-def output_data(fact_table: pd.DataFrame, summary_table: pd.DataFrame, output_directory: str, username: str) -> None:
+
+def output_data(
+    fact_table: pd.DataFrame,
+    summary_table: pd.DataFrame,
+    output_directory: str,
+    username: str,
+) -> None:
     """Outputs compressed CSVs to the output path
 
     Args:
@@ -285,6 +295,28 @@ def output_data(fact_table: pd.DataFrame, summary_table: pd.DataFrame, output_di
         logger.error(f"Failed to save data for user {username}: {str(e)}")
 
 
+def fill_missing_device_columns(fact_table: pd.DataFrame) -> pd.DataFrame:
+    """Fill missing device columns with empty strings
+
+    Args:
+        df (pd.DataFrame): DataFrame to fill missing columns
+
+    Returns:
+        pd.DataFrame: DataFrame with missing columns filled
+    """
+
+    fact_table.sort_values(
+        by=["source_name", "start_ts", "activity_type_name", "device_name"],
+        ascending=True,
+        inplace=True,
+    )
+    fact_table.reset_index(drop=True, inplace=True)
+    fact_table[constants.device_columns] = fact_table[constants.device_columns].fillna(
+        method="ffill"
+    )
+    return fact_table
+
+
 def main(
     record_input_path: str,
     workout_input_path: str,
@@ -307,6 +339,7 @@ def main(
 
     # Transform and clean final fact table
     fact_table = process_fact_table(record_df, workout_df, username, email)
+    fact_table = fill_missing_device_columns(fact_table)
     logger.info("Fact table transformed successfully")
 
     # Summary data is done separately, as it is a different process

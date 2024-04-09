@@ -59,5 +59,13 @@ fact_table_final_columns = [
     "device_manufacturer",
     "device_model",
     "device_hardware",
-    "device_software"
+    "device_software",
+]
+
+device_columns = [
+    "device_name",
+    "device_manufacturer",
+    "device_model",
+    "device_hardware",
+    "device_software",
 ]
