@@ -11,13 +11,13 @@ import charts
 
 USERNAME = "eric"
 CONN_POOL = pool.SimpleConnectionPool(
-    minconn=1, 
-    maxconn=20, 
-    user=os.environ.get("DB_USER"), 
-    password=os.environ.get("DB_PW"), 
-    host=os.environ.get("DB_HOST"), 
-    port="5432", 
-    database=os.environ.get("DB_NAME")
+    minconn=1,
+    maxconn=20,
+    user=os.environ.get("DB_USER"),
+    password=os.environ.get("DB_PW"),
+    host=os.environ.get("DB_HOST"),
+    port="5432",
+    database=os.environ.get("DB_NAME"),
 )
 
 # Initialize your Dash app
@@ -25,14 +25,29 @@ app = dash.Dash(__name__)
 
 # Define your Dash app layout
 app.layout = html.Div(
+    className="body",
     children=[
-        html.H1(children="Health Dashboard"),
+        html.H1(
+            children="Health Dashboard",
+            style={"color": "white", "font-family": "Arial"},
+        ),
         html.Div(
             children=[
                 dcc.DatePickerRange(
                     id="DateRange", start_date=dt(2022, 7, 1), end_date=dt(2024, 4, 1)
                 ),
-                dcc.Checklist(id="Smoothing", options=[{"label": "Smooth chart", "value": True}]),
+                dcc.Checklist(
+                    [
+                        {
+                            "label": html.Div(
+                                ["Apply Smoothing"], style={"color": "White", "font-size": 20}
+                            ),
+                            "value": True,
+                        }
+                    ],
+                    id="Smoothing",
+                    labelStyle={"display": "flex", "align-items": "center"}
+                ),
             ]
         ),
         html.Div(
@@ -43,7 +58,7 @@ app.layout = html.Div(
             ],
             style={"display": "flex"},
         ),
-    ]
+    ],
 )
 
 
@@ -61,17 +76,20 @@ app.layout = html.Div(
 )
 def generate_summary_charts(start_date: dt, end_date: dt, smooth: bool):
     conn = get_conn()
-    active_energy, exercise_mins, stand_hrs = charts.generate_summary_charts(
+    figures = charts.generate_summary_charts(
         start_date, end_date, get_username(), conn, smooth
     )
-    return active_energy, exercise_mins, stand_hrs
+    return figures["ActiveEnergy"], figures["ExerciseMinutes"], figures["StandHours"]
+
 
 def get_conn():
     return CONN_POOL.getconn()
 
+
 def get_username():
     # Placeholder function
-    return 'eric'
+    return "eric"
+
 
 # Run the server
 if __name__ == "__main__":

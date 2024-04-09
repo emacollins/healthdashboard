@@ -2,6 +2,10 @@ import pandas as pd
 import plotly.graph_objects as go
 import sql
 
+import charts_config as cc
+from typing import Dict
+
+
 def query_db(query: str, conn: object, params: tuple = None) -> pd.DataFrame:
     with conn.cursor() as cur:
         if params:
@@ -13,7 +17,33 @@ def query_db(query: str, conn: object, params: tuple = None) -> pd.DataFrame:
         df = pd.DataFrame(data, columns=columns)
     return df
 
-def generate_summary_charts(start_date: str, end_date: str, username: str, conn: object, smooth: bool) -> tuple:
+
+def create_summary_figure(
+    data,
+    chart_name: str,
+):
+    """Create a Plotly figure for the summary charts
+
+    Args:
+        data (pd.DataFrame): The data to plot.
+        chart_name (str): The name of the chart to create.
+
+    Returns:
+        go.Figure: The created figure.
+    """
+
+    chart_config = cc.summary_charts_config[chart_name]
+    mode = "lines"
+
+    fig = go.Figure(layout=chart_config["layout"])
+    fig.add_trace(go.Scatter(x=data.index, y=data[chart_config["y_data_column"]], mode=mode))
+
+    return fig
+
+
+def generate_summary_charts(
+    start_date: str, end_date: str, username: str, conn: object, smooth: bool
+) -> Dict[str, go.Figure]:
     """Generate summary charts for the given date range and username
 
     Args:
@@ -24,16 +54,17 @@ def generate_summary_charts(start_date: str, end_date: str, username: str, conn:
         smooth (bool): Whether to smooth the chart
 
     Returns:
-        _type_: _description_
+        dict: A dict of go.Figure objects
     """
     data = query_db(sql.GET_SUMMARY, conn, (username, start_date, end_date))
     data = data.set_index("date")
     if smooth:
         data = data.rolling(window=30).mean().dropna()
-    
+
     # Generate the summary charts
-    fig_active_energy = go.Figure(data=go.Scatter(x=data.index, y=data["active_energy_burned"], mode="lines+markers")).update_layout(title="Active Energy Burned")
-    fig_exercise_minutes = go.Figure(data=go.Scatter(x=data.index, y=data["exercise_minutes"], mode="lines+markers")).update_layout(title="Exercise Minutes")
-    fig_stand_hours = go.Figure(data=go.Scatter(x=data.index, y=data["stand_hours"], mode="lines+markers")).update_layout(title="Stand Hours")
-    
-    return fig_active_energy, fig_exercise_minutes, fig_stand_hours
+    figures = {key: None for key in cc.summary_charts_config.keys()}
+
+    for chart in figures:
+        figures[chart] = create_summary_figure(data, chart)
+
+    return figures

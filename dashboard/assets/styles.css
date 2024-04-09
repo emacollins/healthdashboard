@@ -1,0 +1,8 @@
+body {
+    background-color:black;
+}
+/* Change the color of the DatePickerRange input and calendar */
+.DateInput_input, .DateInput_input__focused, .CalendarDay__selected {
+    color: white !important;
+    background-color: black !important;
+}
