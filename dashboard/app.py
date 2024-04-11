@@ -7,6 +7,7 @@ from datetime import datetime as dt
 from psycopg2 import pool
 
 import charts
+import sections as s
 
 USERNAME = "eric"
 CONN_POOL = pool.SimpleConnectionPool(
@@ -24,62 +25,31 @@ app = dash.Dash(__name__)
 
 # Define your Dash app layout
 app.layout = html.Div(
-    className="body",
     children=[
-        html.H1(
-            children="Health Dashboard",
-            style={"color": "white", "font-family": "Arial"},
-        ),
-        html.Div(
-            children=[
-                dcc.DatePickerRange(
-                    id="DateRange", start_date=dt(2022, 7, 1), end_date=dt(2024, 4, 1)
-                ),
-                dcc.Checklist(
-                    [
-                        {
-                            "label": html.Div(
-                                ["Apply Smoothing"], style={"color": "White", "font-size": 20}
-                            ),
-                            "value": True,
-                        }
-                    ],
-                    id="Smoothing",
-                    labelStyle={"display": "flex", "align-items": "center"}
-                ),
-                html.Br(),
-            ]
-        ),
-        html.Div(
-            children=[
-                dcc.Graph(id="ActiveEnergy"),
-                dcc.Graph(id="ExerciseMinutes"),
-                dcc.Graph(id="StandHours"),
-            ],
-            style={"display": "flex"},
-        ),
+        s.MAIN_HEADER,
+        s.SETTINGS_BAR,
+        s.TABS,
     ],
 )
 
 
 @app.callback(
     [
-        dash.dependencies.Output("ActiveEnergy", "figure"),
-        dash.dependencies.Output("ExerciseMinutes", "figure"),
-        dash.dependencies.Output("StandHours", "figure"),
+        dash.dependencies.Output("SummaryCaloriesFigure", "figure"),
+        dash.dependencies.Output("SummaryExerciseFigure", "figure"),
+        dash.dependencies.Output("SummarySleepFigure", "figure"),
     ],
     [
         dash.dependencies.Input("DateRange", "start_date"),
         dash.dependencies.Input("DateRange", "end_date"),
-        dash.dependencies.Input("Smoothing", "value"),
     ],
 )
-def generate_summary_charts(start_date: dt, end_date: dt, smooth: bool):
+def generate_summary_rolling_figures(start_date: dt, end_date: dt):
     conn = get_conn()
     figures = charts.generate_summary_charts(
-        start_date, end_date, get_username(), conn, smooth
+        start_date, end_date, get_username(), conn
     )
-    return figures["ActiveEnergy"], figures["ExerciseMinutes"], figures["StandHours"]
+    return figures["ActiveEnergy"], figures["ExerciseMinutes"], figures["SleepHours"]
 
 
 def get_conn():

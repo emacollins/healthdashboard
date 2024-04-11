@@ -42,7 +42,7 @@ def create_summary_figure(
 
 
 def generate_summary_charts(
-    start_date: str, end_date: str, username: str, conn: object, smooth: bool
+    start_date: str, end_date: str, username: str, conn: object
 ) -> Dict[str, go.Figure]:
     """Generate summary charts for the given date range and username
 
@@ -58,8 +58,7 @@ def generate_summary_charts(
     """
     data = query_db(sql.GET_SUMMARY, conn, (username, start_date, end_date))
     data = data.set_index("date")
-    if smooth:
-        data = data.rolling(window=30).mean().dropna()
+    data = data.rolling(window=30).mean().dropna()
 
     # Generate the summary charts
     figures = {key: None for key in cc.summary_charts_config.keys()}

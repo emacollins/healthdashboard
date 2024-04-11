@@ -4,6 +4,8 @@ columns_and_titles = [
     ("stand_hours", "Stand Hours"),
 ]
 
+CHART_BACKGROUND_COLOR = "#33393A"
+
 # X data column is always the index of the dataframe
 summary_charts_config = {
     "ActiveEnergy": {
@@ -21,8 +23,8 @@ summary_charts_config = {
                 "color": "white",
                 "showgrid": False,
             },
-            "plot_bgcolor": "black",
-            "paper_bgcolor": "black",
+            "plot_bgcolor": CHART_BACKGROUND_COLOR,
+            "paper_bgcolor": CHART_BACKGROUND_COLOR,
         },
     },
     "ExerciseMinutes": {
@@ -40,15 +42,15 @@ summary_charts_config = {
                 "color": "white",
                 "showgrid": False,
             },
-            "plot_bgcolor": "black",
-            "paper_bgcolor": "black",
+            "plot_bgcolor": CHART_BACKGROUND_COLOR,
+            "paper_bgcolor": CHART_BACKGROUND_COLOR,
         },
     },
-    "StandHours": {
+    "SleepHours": {
         "y_data_column": "stand_hours",
         "layout": {
             "title": {"text": "Stand Hours", "x": 0.5, "font": {"color": "white"}},
-            "colorway": ["#435EFA"],
+            "colorway": ["#97EBFA"],
             "xaxis": {
                 "title": "Date",
                 "color": "white",
@@ -59,8 +61,8 @@ summary_charts_config = {
                 "color": "white",
                 "showgrid": False,
             },
-            "plot_bgcolor": "black",
-            "paper_bgcolor": "black",
+            "plot_bgcolor": CHART_BACKGROUND_COLOR,
+            "paper_bgcolor": CHART_BACKGROUND_COLOR,
         },
     },
 }
