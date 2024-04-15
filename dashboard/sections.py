@@ -14,7 +14,7 @@ MAIN_HEADER = html.H1(
 SETTINGS_BAR = html.Div(
     children=[
         dcc.DatePickerRange(
-            id="DateRange", start_date=dt(2022, 7, 1), end_date=dt(2024, 4, 1)
+            id="DateRange", start_date=dt(2022, 7, 1).date(), end_date=dt(2024, 4, 1).date()
         ),
     ]
 )

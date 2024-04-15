@@ -1,7 +1,8 @@
 import pandas as pd
 import plotly.graph_objects as go
 import sql
-
+from datetime import datetime
+import scipy.stats as stats
 import charts_config as cc
 from typing import Dict
 
@@ -56,9 +57,16 @@ def generate_summary_charts(
     Returns:
         dict: A dict of go.Figure objects
     """
+    days = (datetime.strptime(end_date, '%Y-%m-%d') - datetime.strptime(start_date, '%Y-%m-%d')).days
     data = query_db(sql.GET_SUMMARY, conn, (username, username, start_date, end_date))
     data = data.set_index("date")
-    data = data.rolling(window=30).mean().dropna()
+
+    if days > 364:
+        window = 30
+    else:
+        window = 7
+
+    data = data.rolling(window=window).mean().dropna()
 
     # Generate the summary charts
     figures = {key: None for key in cc.summary_charts_config.keys()}
