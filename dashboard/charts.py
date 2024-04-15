@@ -56,7 +56,7 @@ def generate_summary_charts(
     Returns:
         dict: A dict of go.Figure objects
     """
-    data = query_db(sql.GET_SUMMARY, conn, (username, start_date, end_date))
+    data = query_db(sql.GET_SUMMARY, conn, (username, username, start_date, end_date))
     data = data.set_index("date")
     data = data.rolling(window=30).mean().dropna()
 
