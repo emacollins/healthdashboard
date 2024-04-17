@@ -61,6 +61,7 @@ def generate_summary_charts(
     data = query_db(sql.GET_SUMMARY, conn, (username, username, start_date, end_date))
     data = data.set_index("date")
 
+    # TODO: Add to user input settings
     if days > 364:
         window = 30
     else:

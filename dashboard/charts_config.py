@@ -4,7 +4,8 @@ columns_and_titles = [
     ("stand_hours", "Stand Hours"),
 ]
 
-CHART_BACKGROUND_COLOR = "black"
+CHART_BACKGROUND_COLOR = "#F5F5F5"
+CHART_TEXT_COLOR = "#636363"
 
 # X data column is always the index of the dataframe
 summary_charts_config = {
@@ -14,55 +15,55 @@ summary_charts_config = {
             "title": {
                 "text": "Calories Burned",
                 "x": 0.5,
-                "font": {"color": CHART_BACKGROUND_COLOR},
+                "font": {"color": CHART_TEXT_COLOR},
             },
-            "colorway": ["#FA4A41"],
-            "xaxis": {"title": "Date", "color": "black", "showgrid": False},
+            "colorway": ["#EA491D"],
+            "xaxis": {"title": "Date", "color": CHART_TEXT_COLOR, "showgrid": False},
             "yaxis": {
                 "title": "",
-                "color": CHART_BACKGROUND_COLOR,
+                "color": CHART_TEXT_COLOR,
                 "showgrid": False,
             },
-            "plot_bgcolor": CHART_BACKGROUND_COLOR,
-            "paper_bgcolor": "white",
+            "paper_bgcolor": "rgba(0,0,0,0)",
+            "plot_bgcolor": "rgba(0,0,0,0)",
         },
     },
     "ExerciseMinutes": {
         "y_data_column": "exercise_minutes",
         "layout": {
-            "title": {"text": "Exercise Minutes", "x": 0.5, "font": {"color": "black"}},
-            "colorway": ["#B2FA49"],
+            "title": {"text": "Exercise Minutes", "x": 0.5, "font": {"color": CHART_TEXT_COLOR}},
+            "colorway": ["#8EEB26"],
             "xaxis": {
                 "title": "Date",
-                "color": "black",
+                "color": CHART_TEXT_COLOR,
                 "showgrid": False,
             },
             "yaxis": {
                 "title": "Minutes Per Day",
-                "color": "black",
+                "color": CHART_TEXT_COLOR,
                 "showgrid": False,
             },
-            "plot_bgcolor": CHART_BACKGROUND_COLOR,
-            "paper_bgcolor": "white",
+            "paper_bgcolor": "rgba(0,0,0,0)",
+            "plot_bgcolor": "rgba(0,0,0,0)",
         },
     },
     "SleepHours": {
         "y_data_column": "hours_slept",
         "layout": {
-            "title": {"text": "Sleep Hours", "x": 0.5, "font": {"color": "black"}},
-            "colorway": ["#97EBFA"],
+            "title": {"text": "Sleep Hours", "x": 0.5, "font": {"color": CHART_TEXT_COLOR}},
+            "colorway": ["#2651EB"],
             "xaxis": {
-                "title": "Date",
-                "color": "black",
+                "title": CHART_TEXT_COLOR,
+                "color": CHART_TEXT_COLOR,
                 "showgrid": False,
             },
             "yaxis": {
                 "title": "Hours Per Day",
-                "color": "black",
+                "color": CHART_TEXT_COLOR,
                 "showgrid": False,
             },
-            "plot_bgcolor": CHART_BACKGROUND_COLOR,
-            "paper_bgcolor": "white",
+            "paper_bgcolor": "rgba(0,0,0,0)",
+            "plot_bgcolor": "rgba(0,0,0,0)",
         },
     },
 }

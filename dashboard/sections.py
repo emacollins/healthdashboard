@@ -1,7 +1,7 @@
 from dash import html, dcc
 from datetime import datetime as dt
 
-from tabs.summary.main import SUMMARY_TAB
+from tabs.summary.components import SUMMARY_TAB
 from tabs.activity.main import ACTIVITY_TAB
 from tabs.workout.main import WORKOUT_TAB
 from tabs.sleep.main import SLEEP_TAB
