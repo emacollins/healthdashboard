@@ -70,9 +70,9 @@ def update_total_calories(start_date: str, end_date: str, comparison_object: str
     conn = get_conn()
     total_calories = summary_analytics.calculate_total_calories(start_date, end_date, get_username(), conn)
 
-    power_equivalent_value = summary_analytics.calculate_power_equivalent(total_calories, comparison_object)
+    power_equivalent_value, power_equivalent_unit = summary_analytics.calculate_power_equivalent(total_calories, comparison_object)
 
-    return f"{total_calories:,}", f"{power_equivalent_value:,} minutes"
+    return f"{total_calories:,}", f"{round(power_equivalent_value, 1):,} {power_equivalent_unit}"
 
 
 def get_conn():

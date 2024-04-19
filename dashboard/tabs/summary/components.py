@@ -51,7 +51,7 @@ CALORIES_POWER_EQUIVALENT_DROPDOWN = html.Div(
 
 CALORIES_POWER_EQUIVALENT_VALUE = html.H2(
     id="SummaryCaloriesPowerEquivalentValue",
-    style={"margin-left": "200px", "color": colors.SUMMARY_CALORIES_COLOR}
+    style={"margin-left": "180px", "color": colors.SUMMARY_CALORIES_COLOR}
 )
 
 CALORIES_POWER_EQUIVALENT= html.Div(
