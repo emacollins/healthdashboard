@@ -62,17 +62,33 @@ def generate_summary_rolling_figures(start_date: str, end_date: str):
     [
         Input("DateRange", "start_date"),
         Input("DateRange", "end_date"),
-        Input("SummaryCaloriesPowerEquivalentDropdown", "value")
+        Input("SummaryCaloriesPowerEquivalentDropdown", "value"),
     ],
 )
 def update_total_calories(start_date: str, end_date: str, comparison_object: str):
     # Calculate the total calories burned for the selected date range
     conn = get_conn()
-    total_calories = summary_analytics.calculate_total_calories(start_date, end_date, get_username(), conn)
+    total_calories = summary_analytics.calculate_total_calories(
+        start_date, end_date, get_username(), conn
+    )
 
-    power_equivalent_value, power_equivalent_unit = summary_analytics.calculate_power_equivalent(total_calories, comparison_object)
+    power_equivalent_value, power_equivalent_unit = (
+        summary_analytics.calculate_power_equivalent(total_calories, comparison_object)
+    )
 
-    return f"{total_calories:,}", f"{round(power_equivalent_value, 1):,} {power_equivalent_unit}"
+    return (
+        f"{total_calories:,}",
+        f"{round(power_equivalent_value, 1):,} {power_equivalent_unit}",
+    )
+
+
+@app.callback(
+    Output("SummaryCaloriesPowerEquivalentDropdown", "options"),
+    Input("SummaryCaloriesPowerEquivalentDropdown", "id"),
+)
+def get_power_equivalent_dropdown_values(id: str):
+    options = summary_analytics.get_power_equivalent_dropdown_values()
+    return options
 
 
 def get_conn():

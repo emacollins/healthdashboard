@@ -38,7 +38,7 @@ CALORIES_POWER_EQUIVALENT_DROPDOWN = html.Div(
     id="SummaryCaloriesPowerEquivalentSection",
     children=[
         html.H3("Powered the average", style={"margin-right": "10px", "color": colors.GENERAL_TEXT_COLOR}),
-        dcc.Dropdown(id="SummaryCaloriesPowerEquivalentDropdown", options=["House", "Lightbulb"], style={"flex": "1", "margin-top": "6px"}),
+        dcc.Dropdown(id="SummaryCaloriesPowerEquivalentDropdown", style={"flex": "1", "margin-top": "6px"}),
         html.H3("for...", style={"margin-left": "10px", "color": colors.GENERAL_TEXT_COLOR})
     ],
     style={

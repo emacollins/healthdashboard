@@ -60,3 +60,7 @@ def calculate_power_equivalent(total_calories: int, comparison_object: str) -> t
 
 
     return convert_days_to_appropriate_unit(days_of_power)
+
+def get_power_equivalent_dropdown_values():
+    values = list(POWER_DATA.keys())
+    return values
