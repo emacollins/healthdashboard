@@ -1,17 +1,5 @@
-GET_SUMMARY_OLD = """
-SELECT creation_date as date, active_energy_burned, exercise_minutes
-FROM summary
-JOIN users ON summary.user_id = users.id
-WHERE users.username = %s
-AND creation_date >= %s AND creation_date <= %s
-"""
-
-# Second join queries sleep data from facts table.
-# Activity_type_id 10 corresponds to "InBed" activity.
-# Sleep data is filtered to include only data from 6 PM to 5 AM.
-
 GET_SUMMARY = """
-SELECT summary.creation_date as date, summary.active_energy_burned, summary.exercise_minutes, sleep.hours_slept
+SELECT summary.creation_date as date, calories.total_calories, summary.exercise_minutes, sleep.hours_slept
 FROM summary
 JOIN users ON summary.user_id = users.id
 JOIN (SELECT facts.creation_ts::date as wake_up_date, SUM(facts.value / 60) as hours_slept
@@ -23,8 +11,26 @@ JOIN (SELECT facts.creation_ts::date as wake_up_date, SUM(facts.value / 60) as h
     AND ((EXTRACT(HOUR FROM facts.start_ts) > 17) OR (EXTRACT(HOUR FROM facts.start_ts) < 12)) 
     AND sources.source_name = 'Pillow'
     AND users.username = %s
-    GROUP BY facts.creation_ts::date) AS sleep
+    GROUP BY facts.creation_ts::date
+    ) AS sleep
 ON summary.creation_date = sleep.wake_up_date
-WHERE users.username = %s AND creation_date >= %s AND creation_date <= %s
+JOIN (SELECT facts.creation_ts::date as creation_date, SUM(facts.value) as total_calories
+    FROM facts
+        JOIN sources ON facts.source_id = sources.id
+        JOIN users ON facts.user_id = users.id
+    WHERE (activity_type_id = 53 OR activity_type_id = 40) AND users.username = %s
+    GROUP BY facts.creation_ts::date
+    ) AS calories
+ON summary.creation_date = calories.creation_date
+WHERE users.username = %s AND summary.creation_date >= %s AND summary.creation_date <= %s
 ORDER BY summary.creation_date
+"""
+
+GET_TOTAL_CALORIES = """
+SELECT SUM(value) as cals
+FROM facts
+JOIN users ON facts.user_id = users.id
+WHERE (activity_type_id = 53 OR activity_type_id = 40) 
+AND users.username = %s 
+AND facts.creation_ts::date >= %s AND facts.creation_ts::date <= %s
 """

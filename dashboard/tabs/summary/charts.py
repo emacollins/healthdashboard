@@ -1,22 +1,10 @@
-import pandas as pd
-import plotly.graph_objects as go
-import sql
 from datetime import datetime
-import scipy.stats as stats
-import charts_config as cc
 from typing import Dict
 
-
-def query_db(query: str, conn: object, params: tuple = None) -> pd.DataFrame:
-    with conn.cursor() as cur:
-        if params:
-            cur.execute(query, params)
-        else:
-            cur.execute(query)
-        data = cur.fetchall()
-        columns = [desc[0] for desc in cur.description]
-        df = pd.DataFrame(data, columns=columns)
-    return df
+import plotly.graph_objects as go
+import sql
+import tabs.summary.charts_config as cc
+import utils
 
 
 def create_summary_figure(
@@ -37,7 +25,7 @@ def create_summary_figure(
     mode = "lines"
 
     fig = go.Figure(layout=chart_config["layout"])
-    fig.add_trace(go.Scatter(x=data.index, y=data[chart_config["y_data_column"]], mode=mode))
+    fig.add_trace(go.Scatter(x=data.index, y=data[chart_config["y_data_column"]], mode=mode, line=dict(shape='spline')))
 
     return fig
 
@@ -58,7 +46,7 @@ def generate_summary_charts(
         dict: A dict of go.Figure objects
     """
     days = (datetime.strptime(end_date, '%Y-%m-%d') - datetime.strptime(start_date, '%Y-%m-%d')).days
-    data = query_db(sql.GET_SUMMARY, conn, (username, username, start_date, end_date))
+    data = utils.query_db(sql.GET_SUMMARY, conn, (username, username, username, start_date, end_date))
     data = data.set_index("date")
 
     # TODO: Add to user input settings

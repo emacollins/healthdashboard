@@ -1,13 +1,16 @@
 # Import necessary libraries
-import dash
-from dash import html, dcc
-import pandas as pd
 import os
 from datetime import datetime as dt
+
+import dash
+import pandas as pd
+from dash import dcc, html
+from dash.dependencies import Input, Output
 from psycopg2 import pool
 
-import charts
 import sections as s
+import tabs.summary.charts as summary_charts
+import tabs.summary.analytics as summary_analytics
 
 USERNAME = "eric"
 CONN_POOL = pool.SimpleConnectionPool(
@@ -19,6 +22,7 @@ CONN_POOL = pool.SimpleConnectionPool(
     port="5432",
     database=os.environ.get("DB_NAME"),
 )
+SUMMARY_DATA = None
 
 # Initialize your Dash app
 app = dash.Dash(__name__)
@@ -35,21 +39,36 @@ app.layout = html.Div(
 
 @app.callback(
     [
-        dash.dependencies.Output("SummaryCaloriesFigure", "figure"),
-        dash.dependencies.Output("SummaryExerciseFigure", "figure"),
-        dash.dependencies.Output("SummarySleepFigure", "figure"),
+        Output("SummaryCaloriesFigure", "figure"),
+        Output("SummaryExerciseFigure", "figure"),
+        Output("SummarySleepFigure", "figure"),
     ],
     [
-        dash.dependencies.Input("DateRange", "start_date"),
-        dash.dependencies.Input("DateRange", "end_date"),
+        Input("DateRange", "start_date"),
+        Input("DateRange", "end_date"),
     ],
 )
-def generate_summary_rolling_figures(start_date: dt, end_date: dt):
+def generate_summary_rolling_figures(start_date: str, end_date: str):
     conn = get_conn()
-    figures = charts.generate_summary_charts(
+    figures = summary_charts.generate_summary_charts(
         start_date, end_date, get_username(), conn
     )
     return figures["ActiveEnergy"], figures["ExerciseMinutes"], figures["SleepHours"]
+
+
+@app.callback(
+    Output("SummaryCaloriesTotalCaloriesBurned", "children"),
+    [
+        Input("DateRange", "start_date"),
+        Input("DateRange", "end_date"),
+    ],
+)
+def update_total_calories(start_date, end_date):
+    # Calculate the total calories burned for the selected date range
+    conn = get_conn()
+    total_calories = summary_analytics.calculate_total_calories(start_date, end_date, get_username(), conn)
+
+    return f"{total_calories:,}"
 
 
 def get_conn():

@@ -1,11 +1,11 @@
 from dash import html, dcc
 
-BACKGROUND_COLOR = "#F6F6F6"
+import colors, fonts
 
-GRAPH_STYLE = style = {
-    "margin": "50px",
+GRAPH_STYLE = {
+    "margin": "30px",
     "borderRadius": "20px",
-    "backgroundColor": "white",
+    "backgroundColor": colors.CHART_BACKGROUND_COLOR,
 }
 
 CALORIES_ROLLING_FIGURE = dcc.Graph(id="SummaryCaloriesFigure", style=GRAPH_STYLE)
@@ -13,6 +13,20 @@ CALORIES_ROLLING_FIGURE = dcc.Graph(id="SummaryCaloriesFigure", style=GRAPH_STYL
 EXERCISE_ROLLING_FIGURE = dcc.Graph(id="SummaryExerciseFigure", style=GRAPH_STYLE)
 
 SLEEP_ROLLING_FIGURE = dcc.Graph(id="SummarySleepFigure", style=GRAPH_STYLE)
+
+TOTAL_CALORIES_BURNED = html.Div(
+    id="SummaryCaloriesTotalCaloriesSection",
+    children=[
+        html.H2("Total Calories Burned:", style={"margin-right": "10px", "color": colors.GENERAL_TEXT_COLOR}),
+        html.H2(id="SummaryCaloriesTotalCaloriesBurned", style={"color": colors.SUMMARY_CALORIES_COLOR}),
+    ],
+    style={
+                "display": "flex",
+                "flex-direction": "row",
+                "flex-wrap": "nowrap",
+                "margin-left": "50px", #2x GRAPH_STYLE margin - margin-right
+            },
+)
 
 SUMMARY_TAB = html.Div(
     id="SummaryTab",
@@ -24,9 +38,10 @@ SUMMARY_TAB = html.Div(
                     id="SummaryCalories",
                     children=[
                         CALORIES_ROLLING_FIGURE,
+                        TOTAL_CALORIES_BURNED,
                     ],
                     style={
-                        "flex": "1",
+                        "flex": "1"
                     },
                 ),
                 html.Div(
@@ -47,9 +62,10 @@ SUMMARY_TAB = html.Div(
             style={
                 "display": "flex",
                 "flex-direction": "row",
-                "flex-wrap": "wrap",
-                "backgroundColor": BACKGROUND_COLOR,
+                "flex-wrap": "nowrap",
+                "backgroundColor": colors.BACKGROUND_COLOR,
             },
         ),
     ],
+    style={"font-family": fonts.FONT}
 )

@@ -7,18 +7,29 @@ from tabs.workout.main import WORKOUT_TAB
 from tabs.sleep.main import SLEEP_TAB
 from tabs.insights.main import INSIGHTS_TAB
 
+import colors, fonts
+
 MAIN_HEADER = html.H1(
-    children="Health Dashboard"
+    children="Health Report",
+    style={
+        "text-align": "center",
+        "font-family": fonts.FONT,
+        "color": colors.CHART_TEXT_COLOR,
+        "font-size": "48px",
+    },
 )
-#---------------------------------------------------------
+# ---------------------------------------------------------
 SETTINGS_BAR = html.Div(
     children=[
         dcc.DatePickerRange(
-            id="DateRange", start_date=dt(2022, 7, 1).date(), end_date=dt(2024, 4, 1).date()
+            id="DateRange",
+            start_date=dt(2022, 7, 1).date(),
+            end_date=dt(2024, 4, 18).date(),
+            style={"font-family": fonts.FONT, "color": colors.GENERAL_TEXT_COLOR},
         ),
     ]
 )
-#---------------------------------------------------------
+# ---------------------------------------------------------
 TABS = dcc.Tabs(
     id="tabs",
     children=[
@@ -28,5 +39,7 @@ TABS = dcc.Tabs(
         dcc.Tab(label="Sleep", children=SLEEP_TAB),
         dcc.Tab(label="Insights", children=INSIGHTS_TAB),
     ],
+    style={"font-family": fonts.FONT,
+           "font-size": "24px",
+           "color": colors.GENERAL_TEXT_COLOR},
 )
-
