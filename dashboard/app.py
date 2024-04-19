@@ -58,17 +58,21 @@ def generate_summary_rolling_figures(start_date: str, end_date: str):
 
 @app.callback(
     Output("SummaryCaloriesTotalCaloriesBurned", "children"),
+    Output("SummaryCaloriesPowerEquivalentValue", "children"),
     [
         Input("DateRange", "start_date"),
         Input("DateRange", "end_date"),
+        Input("SummaryCaloriesPowerEquivalentDropdown", "value")
     ],
 )
-def update_total_calories(start_date, end_date):
+def update_total_calories(start_date: str, end_date: str, comparison_object: str):
     # Calculate the total calories burned for the selected date range
     conn = get_conn()
     total_calories = summary_analytics.calculate_total_calories(start_date, end_date, get_username(), conn)
 
-    return f"{total_calories:,}"
+    power_equivalent_value = summary_analytics.calculate_power_equivalent(total_calories, comparison_object)
+
+    return f"{total_calories:,}", f"{power_equivalent_value:,} minutes"
 
 
 def get_conn():
