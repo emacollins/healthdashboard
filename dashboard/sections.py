@@ -33,13 +33,10 @@ SETTINGS_BAR = html.Div(
 TABS = dcc.Tabs(
     id="tabs",
     children=[
-        dcc.Tab(label="Summary", children=SUMMARY_TAB),
-        dcc.Tab(label="Activity", children=ACTIVITY_TAB),
-        dcc.Tab(label="Workout", children=WORKOUT_TAB),
-        dcc.Tab(label="Sleep", children=SLEEP_TAB),
-        dcc.Tab(label="Insights", children=INSIGHTS_TAB),
+        dcc.Tab(label="Summary", children=SUMMARY_TAB, className='custom-tabs', selected_className='custom-tab--selected'),
+        dcc.Tab(label="Activity", children=ACTIVITY_TAB, className='custom-tabs', selected_className='custom-tab--selected'),
+        dcc.Tab(label="Workout", children=WORKOUT_TAB, className='custom-tabs', selected_className='custom-tab--selected'),
+        dcc.Tab(label="Sleep", children=SLEEP_TAB, className='custom-tabs', selected_className='custom-tab--selected'),
+        dcc.Tab(label="Insights", children=INSIGHTS_TAB, className='custom-tabs', selected_className='custom-tab--selected'),
     ],
-    style={"font-family": fonts.FONT,
-           "font-size": "24px",
-           "color": colors.GENERAL_TEXT_COLOR},
 )
