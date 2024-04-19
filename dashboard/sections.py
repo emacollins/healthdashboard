@@ -18,6 +18,42 @@ MAIN_HEADER = html.H1(
         "font-size": "48px",
     },
 )
+
+MAIN_HEADER = html.Div(
+    children=[
+        html.H1(
+            children="Health Report",
+            style={
+                "text-align": "center",
+                "font-family": "Helvetica, sans-serif",
+                "color": "#333",
+                "font-size": "48px",
+            },
+        ),
+        html.H2(
+            children="Created by Eric Collins",
+            style={
+                "text-align": "center",
+                "font-family": "Roboto, sans-serif",
+                "color": colors.GENERAL_TEXT_COLOR,
+                "font-size": "18px",
+            },
+        ),
+        html.Img(
+            src="assets/logo_transparent.png",
+            style={
+                "height": "300px",
+                "width": "300px",
+                "position": "absolute",
+                "top": "-100px",
+                "left": "850px",
+            },
+        ),
+    ],
+    style={
+        "position": "relative",
+    },
+)
 # ---------------------------------------------------------
 SETTINGS_BAR = html.Div(
     children=[
