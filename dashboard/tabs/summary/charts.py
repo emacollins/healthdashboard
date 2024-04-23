@@ -1,10 +1,32 @@
 from datetime import datetime
 from typing import Dict
 
+import pandas as pd
+import scipy.stats as stats
 import plotly.graph_objects as go
 import sql
 import tabs.summary.charts_config as cc
 import utils
+
+
+def create_trendline_column(data: pd.DataFrame, x: str, y: str) -> pd.DataFrame:
+    """Add trendline values column to plot
+
+    Args:
+        data (pd.DataFrame): Data to add trendline column to
+
+    Returns:
+        pd.DataFrame: Dataframe with column trendline column
+    """
+
+    if "trendline" in data.columns:
+        return data
+
+    slope, intercept, r, p, se = stats.linregress(data[x], data[y])
+
+    data["trendline"] = slope * data[x] + intercept
+
+    return data
 
 
 def create_summary_figure(
@@ -25,7 +47,22 @@ def create_summary_figure(
     mode = "lines"
 
     fig = go.Figure(layout=chart_config["layout"])
-    fig.add_trace(go.Scatter(x=data.index, y=data[chart_config["y_data_column"]], mode=mode, line=dict(shape='spline')))
+    fig.add_trace(
+        go.Scatter(
+            x=data.index,
+            y=data[chart_config["y_data_column"]],
+            mode=mode,
+            line=dict(shape="spline"),
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=data.index,
+            y=data["trendline"],
+            mode=mode,
+            line=dict(dash="dash"),
+        )
+    )
 
     return fig
 
@@ -45,17 +82,26 @@ def generate_summary_charts(
     Returns:
         dict: A dict of go.Figure objects
     """
-    days = (datetime.strptime(end_date, '%Y-%m-%d') - datetime.strptime(start_date, '%Y-%m-%d')).days
-    data = utils.query_db(sql.GET_SUMMARY, conn, (username, username, username, start_date, end_date))
+    days = (
+        datetime.strptime(end_date, "%Y-%m-%d")
+        - datetime.strptime(start_date, "%Y-%m-%d")
+    ).days
+    data = utils.query_db(
+        sql.GET_SUMMARY, conn, (username, username, username, start_date, end_date)
+    )
     data = data.set_index("date")
 
     # TODO: Add to user input settings
     if days > 364:
         window = 30
-    else:
+    elif days > 30:
         window = 7
+    else:
+        window = 1
 
     data = data.rolling(window=window).mean().dropna()
+    data["date_index"] = range(len(data))
+    data = create_trendline_column(data, "date_index", "total_calories")
 
     # Generate the summary charts
     figures = {key: None for key in cc.summary_charts_config.keys()}
