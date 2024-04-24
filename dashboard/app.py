@@ -85,11 +85,12 @@ def update_total_calories(start_date: str, end_date: str, comparison_object: str
 
 @app.callback(
     Output("SummaryCaloriesPowerEquivalentDropdown", "options"),
+    Output("SummaryCaloriesPowerEquivalentDropdown", "value"),
     Input("SummaryCaloriesPowerEquivalentDropdown", "id"),
 )
 def get_power_equivalent_dropdown_values(id: str):
     options = summary_analytics.get_power_equivalent_dropdown_values()
-    return options
+    return options, options[0]
 
 @app.callback(
         Output("BurgersValue", "children"),

@@ -9,7 +9,9 @@ import tabs.summary.charts_config as cc
 import utils
 
 
-def create_trendline_column(data: pd.DataFrame, x: str, y: str) -> pd.DataFrame:
+def create_trendline_column(
+    data: pd.DataFrame, x: str, y: str, chart_name: str
+) -> pd.DataFrame:
     """Add trendline values column to plot
 
     Args:
@@ -24,7 +26,7 @@ def create_trendline_column(data: pd.DataFrame, x: str, y: str) -> pd.DataFrame:
 
     slope, intercept, r, p, se = stats.linregress(data[x], data[y])
 
-    data["trendline"] = slope * data[x] + intercept
+    data[chart_name + "_trendline"] = slope * data[x] + intercept
 
     return data
 
@@ -47,6 +49,7 @@ def create_summary_figure(
     mode = "lines"
 
     fig = go.Figure(layout=chart_config["layout"])
+    fig.update_layout(showlegend=False)
     fig.add_trace(
         go.Scatter(
             x=data.index,
@@ -58,7 +61,7 @@ def create_summary_figure(
     fig.add_trace(
         go.Scatter(
             x=data.index,
-            y=data["trendline"],
+            y=data[chart_name + "_trendline"],
             mode=mode,
             line=dict(dash="dash"),
         )
@@ -100,13 +103,15 @@ def generate_summary_charts(
         window = 1
 
     data = data.rolling(window=window).mean().dropna()
-    data["date_index"] = range(len(data))
-    data = create_trendline_column(data, "date_index", "total_calories")
+    data["date_index"] = range(len(data))  # used for trendline
 
     # Generate the summary charts
     figures = {key: None for key in cc.summary_charts_config.keys()}
 
     for chart in figures:
+        data = create_trendline_column(
+            data, "date_index", cc.summary_charts_config[chart]["y_data_column"], chart
+        )
         figures[chart] = create_summary_figure(data, chart)
 
     return figures
