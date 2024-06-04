@@ -34,3 +34,23 @@ WHERE (activity_type_id = 53 OR activity_type_id = 40)
 AND users.username = %s 
 AND facts.creation_ts::date >= %s AND facts.creation_ts::date <= %s
 """
+
+GET_TOTAL_EXERCISE_MINUTES = """
+SELECT SUM(summary.exercise_minutes) as total_mins
+FROM summary
+JOIN users ON summary.user_id = users.id
+AND users.username = %s 
+AND summary.creation_date >= %s AND summary.creation_date <= %s
+"""
+
+GET_EXERCISE_COUNT = """
+SELECT COUNT(f.creation_ts::date), a.activity_name
+FROM facts f
+JOIN activity_types a ON a.id = f.activity_type_id
+JOIN users ON f.user_id = users.id
+WHERE a.category = 'workout' 
+AND users.username = %s 
+AND f.creation_ts >= %s 
+AND f.creation_ts <= %s
+GROUP BY a.activity_name
+"""

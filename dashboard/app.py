@@ -81,6 +81,24 @@ def update_total_calories(start_date: str, end_date: str, comparison_object: str
         f"{round(power_equivalent_value, 1):,} {power_equivalent_unit}",
     )
 
+@app.callback(
+    Output("SummaryExerciseTotalExercise", "children"),
+    [
+        Input("DateRange", "start_date"),
+        Input("DateRange", "end_date"),
+    ],
+)
+def update_total_exercise(start_date: str, end_date: str):
+    # Calculate the total calories burned for the selected date range
+    conn = get_conn()
+    total_exercise = summary_analytics.calculate_total_exercise(
+        start_date, end_date, get_username(), conn
+    )
+    CONN_POOL.putconn(conn)
+    return (
+        f"{total_exercise:,}",
+    )
+
 
 
 @app.callback(
@@ -115,6 +133,21 @@ def update_food_equivalent(start_date: str, end_date: str):
         f"{round(burgers, 1):,}",
         f"{round(cheezeits, 1):,}",
     )
+
+@app.callback(
+        Output("SummaryFavoriteWorkoutsFigure", "figure"),
+    [
+        Input("DateRange", "start_date"),
+        Input("DateRange", "end_date"),
+    ],
+)
+def update_favorite_workout(start_date: str, end_date: str):
+    conn = get_conn()
+    figure = summary_charts.get_favorite_workout_chart(
+        start_date, end_date, get_username(), conn
+    )
+    CONN_POOL.putconn(conn)
+    return figure
 
 def get_conn():
     return CONN_POOL.getconn()

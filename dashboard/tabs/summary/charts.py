@@ -115,3 +115,38 @@ def generate_summary_charts(
         figures[chart] = create_summary_figure(data, chart)
 
     return figures
+
+def get_favorite_workout_chart(
+    start_date: str, end_date: str, username: str, conn: object
+) -> go.Figure:
+    """Creates bar chart of top workouts in date range
+
+    Args:
+        start_date (str): _description_
+        end_date (str): _description_
+        username (str): _description_
+        conn (object): _description_
+    """
+    config = cc.favorite_workout_chart_config
+    days = (
+        datetime.strptime(end_date, "%Y-%m-%d")
+        - datetime.strptime(start_date, "%Y-%m-%d")
+    ).days
+    data = utils.query_db(
+        sql.GET_EXERCISE_COUNT, conn, (username, start_date, end_date)
+    )
+    data = data.sort_values(by="count", ascending=True)
+    data = data.tail(5)
+    data[config['y_data_column']] = data[config['y_data_column']].apply(utils.split_activity_name_string)
+    fig = go.Figure(layout=config["layout"])
+    fig.add_trace(
+        go.Bar(
+            y=data[cc.favorite_workout_chart_config["y_data_column"]],
+            x=data[cc.favorite_workout_chart_config["x_data_column"]],
+            text=data[cc.favorite_workout_chart_config["x_data_column"]],
+            textposition='auto',
+            orientation="h",
+            textfont={"color": "white", "size": 14}
+        )
+    )
+    return fig

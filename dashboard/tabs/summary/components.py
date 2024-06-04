@@ -6,6 +6,8 @@ GRAPH_STYLE = {
     "margin": "30px",
     "borderRadius": "20px",
     "backgroundColor": colors.CHART_BACKGROUND_COLOR,
+    "width": "400px",
+    "height": "300px",
 }
 
 CALORIES_ROLLING_FIGURE = dcc.Graph(id="SummaryCaloriesFigure", style=GRAPH_STYLE)
@@ -13,6 +15,10 @@ CALORIES_ROLLING_FIGURE = dcc.Graph(id="SummaryCaloriesFigure", style=GRAPH_STYL
 EXERCISE_ROLLING_FIGURE = dcc.Graph(id="SummaryExerciseFigure", style=GRAPH_STYLE)
 
 SLEEP_ROLLING_FIGURE = dcc.Graph(id="SummarySleepFigure", style=GRAPH_STYLE)
+
+FAVORITE_WORKOUTS_FIGURE = dcc.Graph(
+    id="SummaryFavoriteWorkoutsFigure", style=GRAPH_STYLE
+)
 
 TOTAL_CALORIES_BURNED = html.Div(
     id="SummaryCaloriesTotalCaloriesSection",
@@ -24,6 +30,26 @@ TOTAL_CALORIES_BURNED = html.Div(
         html.H2(
             id="SummaryCaloriesTotalCaloriesBurned",
             style={"color": colors.SUMMARY_CALORIES_COLOR},
+        ),
+    ],
+    style={
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "nowrap",
+        "margin-left": "50px",  # 2x GRAPH_STYLE margin - margin-right
+    },
+)
+
+TOTAL_MINUTES_EXERCISED = html.Div(
+    id="SummaryExerciseTotalExerciseSection",
+    children=[
+        html.H2(
+            "Total Exercise Minutes:",
+            style={"margin-right": "10px", "color": colors.GENERAL_TEXT_COLOR},
+        ),
+        html.H2(
+            id="SummaryExerciseTotalExercise",
+            style={"color": colors.SUMMARY_EXERCISE_COLOR},
         ),
     ],
     style={
@@ -104,16 +130,31 @@ CHEEZEITS_LINE = html.Div(
     style={
         "display": "flex",
         "flex-direction": "row",
-        "flex-wrap": "nowrap"  # 2x GRAPH_STYLE margin - margin-right
+        "flex-wrap": "nowrap",  # 2x GRAPH_STYLE margin - margin-right
     },
 )
 
 FOOD_EQUIVALENT_SUMMARY = html.Div(
     id="SummaryFoodEquivalent",
     children=[
-        html.H3("Burned the equivalent of...", style={"color": colors.GENERAL_TEXT_COLOR}),
+        html.H3(
+            "Burned the equivalent of...", style={"color": colors.GENERAL_TEXT_COLOR}
+        ),
         BURGER_LINE,
         CHEEZEITS_LINE,
+    ],
+    style={
+        "display": "flex",
+        "flex-direction": "column",
+        "align-items": "center",
+    },
+)
+
+FAVORITE_WORKOUTS = html.Div(
+    id="SummaryFavoriteWorkouts",
+    children=[
+        html.H3("Recorded Workouts", style={"color": colors.GENERAL_TEXT_COLOR, "margin-bottom": "0px"}),
+        FAVORITE_WORKOUTS_FIGURE,
     ],
     style={
         "display": "flex",
@@ -134,6 +175,7 @@ SUMMARY_TAB = html.Div(
                         CALORIES_ROLLING_FIGURE,
                         TOTAL_CALORIES_BURNED,
                         html.Br(),
+                        html.Br(),
                         CALORIES_POWER_EQUIVALENT,
                         html.Br(),
                         FOOD_EQUIVALENT_SUMMARY,
@@ -144,6 +186,10 @@ SUMMARY_TAB = html.Div(
                     id="SummaryExercise",
                     children=[
                         EXERCISE_ROLLING_FIGURE,
+                        TOTAL_MINUTES_EXERCISED,
+                        html.Br(),
+                        html.Br(),
+                        FAVORITE_WORKOUTS,
                     ],
                     style={"flex": "1"},
                 ),

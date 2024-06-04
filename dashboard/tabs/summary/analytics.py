@@ -14,6 +14,28 @@ HOURS_IN_DAY = 24
 MINUTES_IN_HOUR = 60
 SECONDS_IN_MINUTE = 60
 
+def calculate_total_exercise(start_date: str, end_date: str, username: str, conn: object) -> int:
+    """Calculates and returns total exercise and average exercise per day
+
+    Args:
+        start_date (str): _description_
+        end_date (str): _description_
+        username (str): _description_
+        conn (object): _description_
+
+    Returns:
+        int: _description_
+    """
+    df = utils.query_db(
+        sql.GET_TOTAL_EXERCISE_MINUTES,
+        conn,
+        params=(
+            username,
+            start_date,
+            end_date,
+        ),
+    )
+    return int(df.iloc[0, 0])
 
 def calculate_total_calories(
     start_date: str, end_date: str, username: str, conn: object
@@ -30,7 +52,7 @@ def calculate_total_calories(
         conn (object): psycopg2 connection
 
     Returns:
-        int: Total calorioes (kCal)
+        int: Total calories (kCal)
     """
     df = utils.query_db(
         sql.GET_TOTAL_CALORIES,
