@@ -12,6 +12,9 @@ workout_heatmap_chart_config = {
         "xaxis": {"title_text": None, "side": "top"},
         "yaxis": {"title_text": None},
         "coloraxis": {"showscale": False},
+        "margin": {"l": 20, "r": 20, "t": 20, "b": 20, "pad": 0},
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
     },
 }
 favorite_workout_chart_config = {

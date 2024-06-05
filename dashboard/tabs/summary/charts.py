@@ -197,7 +197,7 @@ def get_workout_heatmap(
         columns=list(day_map.values()),
         index=["Night", "Evening", "Afternoon", "Morning"],
     )
-    data = data.fillna(0)
+    data = data[~(data.isna()).all(axis=1)]
     fig = go.Figure(
     data=go.Heatmap(
         z=data.values,
