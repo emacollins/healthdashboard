@@ -6,6 +6,14 @@ TITLE_Y = 0.9
 
 SUMMARY_MARGIN = {"l": 5, "r": 50, "t": 80, "b": 60, "pad": 0}
 
+workout_heatmap_chart_config = {
+    "layout": {
+        "autosize": True,
+        "xaxis": {"title_text": None, "side": "top"},
+        "yaxis": {"title_text": None},
+        "coloraxis": {"showscale": False},
+    },
+}
 favorite_workout_chart_config = {
     "y_data_column": "activity_name",
     "x_data_column": "count",
@@ -22,14 +30,14 @@ favorite_workout_chart_config = {
             "color": colors.CHART_TEXT_COLOR,
             "showgrid": False,
             "tickfont": {"size": 14},
-            "automargin": True
+            "automargin": True,
         },
         "paper_bgcolor": "rgba(0,0,0,0)",
         "plot_bgcolor": "rgba(0,0,0,0)",
-        "margin": {"l":0, "r": 20, "t": 10, "b": 5, "pad": 0},
+        "margin": {"l": 0, "r": 20, "t": 10, "b": 5, "pad": 0},
         "font": {"family": fonts.FONT},
-        "bargap": 0.5
-    }
+        "bargap": 0.5,
+    },
 }
 
 

@@ -54,3 +54,14 @@ AND f.creation_ts >= %s
 AND f.creation_ts <= %s
 GROUP BY a.activity_name
 """
+
+GET_EXERCISE_MIN = """
+SELECT EXTRACT(hour FROM creation_ts) AS hour, EXTRACT(DOW FROM creation_ts) AS day, f.value
+FROM facts f	
+JOIN activity_types a ON a.id = f.activity_type_id
+JOIN users ON f.user_id = users.id
+WHERE a.category = 'workout' 
+AND users.username = %s 
+AND f.creation_ts >= %s 
+AND f.creation_ts <= %s
+"""

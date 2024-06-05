@@ -20,6 +20,8 @@ FAVORITE_WORKOUTS_FIGURE = dcc.Graph(
     id="SummaryFavoriteWorkoutsFigure", style=GRAPH_STYLE
 )
 
+WORKOUT_HEATMAP_FIGURE = dcc.Graph(id="SummaryWorkoutHeatmapFigure", style=GRAPH_STYLE)
+
 TOTAL_CALORIES_BURNED = html.Div(
     id="SummaryCaloriesTotalCaloriesSection",
     children=[
@@ -163,6 +165,19 @@ FAVORITE_WORKOUTS = html.Div(
     },
 )
 
+WORKOUT_HEATMAP = html.Div(
+    id="SummaryFavoriteWorkouts",
+    children=[
+        html.H3("Workout Times", style={"color": colors.GENERAL_TEXT_COLOR, "margin-bottom": "0px"}),
+        WORKOUT_HEATMAP_FIGURE,
+    ],
+    style={
+        "display": "flex",
+        "flex-direction": "column",
+        "align-items": "center",
+    },
+)
+
 SUMMARY_TAB = html.Div(
     id="SummaryTab",
     children=[
@@ -190,6 +205,7 @@ SUMMARY_TAB = html.Div(
                         html.Br(),
                         html.Br(),
                         FAVORITE_WORKOUTS,
+                        WORKOUT_HEATMAP
                     ],
                     style={"flex": "1"},
                 ),

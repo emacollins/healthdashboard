@@ -4,9 +4,11 @@ from typing import Dict
 import pandas as pd
 import scipy.stats as stats
 import plotly.graph_objects as go
+import plotly.express as px
 import sql
 import tabs.summary.charts_config as cc
 import utils
+import colors
 
 
 def create_trendline_column(
@@ -116,6 +118,7 @@ def generate_summary_charts(
 
     return figures
 
+
 def get_favorite_workout_chart(
     start_date: str, end_date: str, username: str, conn: object
 ) -> go.Figure:
@@ -137,16 +140,74 @@ def get_favorite_workout_chart(
     )
     data = data.sort_values(by="count", ascending=True)
     data = data.tail(5)
-    data[config['y_data_column']] = data[config['y_data_column']].apply(utils.split_activity_name_string)
+    data[config["y_data_column"]] = data[config["y_data_column"]].apply(
+        utils.split_activity_name_string
+    )
     fig = go.Figure(layout=config["layout"])
     fig.add_trace(
         go.Bar(
             y=data[cc.favorite_workout_chart_config["y_data_column"]],
             x=data[cc.favorite_workout_chart_config["x_data_column"]],
             text=data[cc.favorite_workout_chart_config["x_data_column"]],
-            textposition='auto',
+            textposition="auto",
             orientation="h",
-            textfont={"color": "white", "size": 14}
+            textfont={"color": "white", "size": 14},
         )
     )
+    return fig
+
+
+def get_workout_heatmap(
+    start_date: str, end_date: str, username: str, conn: object
+) -> go.Figure:
+    """Creates heatmap of workout time by days of the week and time
+
+    Args:
+        start_date (str): _description_
+        end_date (str): _description_
+        username (str): _description_
+        conn (object): _description_
+    """
+    config = cc.workout_heatmap_chart_config
+    data = utils.query_db(sql.GET_EXERCISE_MIN, conn, (username, start_date, end_date))
+    day_map = {
+        0: "Sunday",
+        1: "Monday",
+        2: "Tuesday",
+        3: "Wednesday",
+        4: "Thursday",
+        5: "Friday",
+        6: "Saturday",
+    }
+    data["day"] = data["day"].map(day_map)
+
+    def label_time(t):
+        if (t >= 17) & (t < 21):
+            return "Evening"
+        elif (t >= 21) & (t < 4):
+            return "Night"
+        elif (t >= 4) & (t < 12):
+            return "Morning"
+        elif (t >= 12) & (t < 17):
+            return "Afternoon"
+
+    data["time_label"] = data["hour"].apply(label_time)
+    data = data.groupby(["day", "time_label"]).sum().reset_index()
+    data = data.pivot(index="time_label", columns="day", values="value").reindex(
+        columns=list(day_map.values()),
+        index=["Night", "Evening", "Afternoon", "Morning"],
+    )
+    data = data.fillna(0)
+    fig = go.Figure(
+    data=go.Heatmap(
+        z=data.values,
+        x=data.columns,
+        y=data.index,
+        colorscale=["white", colors.SUMMARY_EXERCISE_COLOR],
+        showscale=False
+    )
+)
+
+    fig.update_layout(**config["layout"])
+
     return fig
