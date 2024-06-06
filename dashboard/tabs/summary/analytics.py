@@ -117,3 +117,28 @@ def calculate_food_equivalent(total_calories: int) -> tuple[float]:
     burgers = total_calories / FOOD_DATA.get("Burger")
     cheezeits = total_calories / FOOD_DATA.get("Cheezeits")
     return burgers, cheezeits
+
+def calculate_average_sleep(start_date: str, end_date: str, username: str, conn: object) -> float:
+    """Calculatees average sleep duration of timeframe
+
+    Args:
+        start_date (str): Starting date
+        end_date (str): Ending date
+        username (str): User
+        conn (object): psycopg2 connection to database
+
+    Returns:
+        float: average nightly sleep in hours
+    """
+    df = utils.query_db(
+        sql.GET_AVG_SLEEP,
+        conn,
+        params=(
+            username,
+            start_date,
+            end_date,
+        ),
+    )
+    df = df[df['hours_slept'] > 2] # Remove anamolies
+
+    return df['hours_slept'].mean()

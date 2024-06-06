@@ -99,6 +99,23 @@ def update_total_exercise(start_date: str, end_date: str):
         f"{total_exercise:,}",
     )
 
+@app.callback(
+    Output("SummaryAvgSleep", "children"),
+    [
+        Input("DateRange", "start_date"),
+        Input("DateRange", "end_date"),
+    ],
+)
+def update_total_exercise(start_date: str, end_date: str):
+    # Calculate the total calories burned for the selected date range
+    conn = get_conn()
+    avg_sleep = summary_analytics.calculate_average_sleep(
+        start_date, end_date, get_username(), conn
+    )
+    CONN_POOL.putconn(conn)
+    return (
+        f"{avg_sleep:.1f}",
+    )
 
 
 @app.callback(

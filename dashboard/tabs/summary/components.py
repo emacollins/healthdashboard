@@ -62,6 +62,26 @@ TOTAL_MINUTES_EXERCISED = html.Div(
     },
 )
 
+AVERAGE_SLEEP_PER_NIGHT = html.Div(
+    id="SummaryAvgSleepSection",
+    children=[
+        html.H2(
+            "Average Hours Slept:",
+            style={"margin-right": "10px", "color": colors.GENERAL_TEXT_COLOR},
+        ),
+        html.H2(
+            id="SummaryAvgSleep",
+            style={"color": colors.SUMMARY_SLEEP_COLOR},
+        ),
+    ],
+    style={
+        "display": "flex",
+        "flex-direction": "row",
+        "flex-wrap": "nowrap",
+        "margin-left": "50px",  # 2x GRAPH_STYLE margin - margin-right
+    },
+)
+
 CALORIES_POWER_EQUIVALENT_DROPDOWN = html.Div(
     id="SummaryCaloriesPowerEquivalentSection",
     children=[
@@ -168,7 +188,6 @@ FAVORITE_WORKOUTS = html.Div(
 WORKOUT_HEATMAP = html.Div(
     id="SummaryFavoriteWorkouts",
     children=[
-        html.H3("Workout Times", style={"color": colors.GENERAL_TEXT_COLOR, "margin-bottom": "0px"}),
         WORKOUT_HEATMAP_FIGURE,
     ],
     style={
@@ -203,9 +222,8 @@ SUMMARY_TAB = html.Div(
                         EXERCISE_ROLLING_FIGURE,
                         TOTAL_MINUTES_EXERCISED,
                         html.Br(),
-                        html.Br(),
+                        WORKOUT_HEATMAP,
                         FAVORITE_WORKOUTS,
-                        WORKOUT_HEATMAP
                     ],
                     style={"flex": "1"},
                 ),
@@ -213,6 +231,7 @@ SUMMARY_TAB = html.Div(
                     id="SummarySleep",
                     children=[
                         SLEEP_ROLLING_FIGURE,
+                        AVERAGE_SLEEP_PER_NIGHT
                     ],
                     style={"flex": "1"},
                 ),
