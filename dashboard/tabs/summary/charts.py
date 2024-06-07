@@ -224,7 +224,22 @@ def get_sleep_variability_chart(start_date: str, end_date: str, username: str, c
     Returns:
         go.Figure: _description_
     """
+    rolling_window = 14
     data = utils.query_db(sql.GET_SLEEP_VARIABILITY_DATA, conn, (username, start_date, end_date))
-    data_fall_aslee_time = data.groupby(by="wake_up_date")["start_ts"].min()
-    data_wake_up_time = data.groupby(by="wake_up_date")["end_ts"].max()
+    data['wake_up_date'] = pd.to_datetime(data['wake_up_date'], utc=True)
+    data['start_ts'] = pd.to_datetime(data['start_ts'],utc=True)
+    
+
+    data_fall_asleep_time = data.groupby(by="wake_up_date")[["start_ts"]].min().reset_index()
+    data_fall_asleep_time['fall_asleep_variability'] = (abs((data_fall_asleep_time["start_ts"] - data_fall_asleep_time["wake_up_date"].dt.normalize()).dt.total_seconds()) / 3600).rolling(rolling_window).std()
+    data_fall_asleep_time['hours_slept_variability'] = data_fall_asleep_time['hours_slept'].rolling(rolling_window).std()
+
+    data_wake_up_time = data.groupby(by="wake_up_date")[["end_ts"]].max().reset_index()
+    data_wake_up_time['wake_up_variability'] = (abs((data_wake_up_time["end_ts"] - data_wake_up_time["wake_up_date"].dt.normalize()).dt.total_seconds()) / 3600).rolling(rolling_window).std()
+    df = pd.DataFrame(data={'date': data['wake_up_date'], 'fall_asleep_variability': data_fall_asleep_time["fall_asleep_variability"], 'wake_up_variability': data_wake_up_time['wake_up_variability']})
+    df
+
+
+
+
     data

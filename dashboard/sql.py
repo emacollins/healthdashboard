@@ -82,7 +82,7 @@ GROUP BY facts.creation_ts::date
 """
 
 GET_SLEEP_VARIABILITY_DATA = """
-SELECT facts.creation_ts::date as wake_up_date, facts.start_ts, facts.end_ts, facts.value / 60 as hours_slept
+SELECT facts.creation_ts as wake_up_date, facts.start_ts, facts.end_ts, facts.value / 60 as hours_slept
 FROM facts
         JOIN sources ON facts.source_id = sources.id
         JOIN activity_types ON activity_types.id = facts.activity_type_id
