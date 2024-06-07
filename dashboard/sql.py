@@ -80,3 +80,17 @@ AND facts.creation_ts >= %s
 AND facts.creation_ts <= %s
 GROUP BY facts.creation_ts::date
 """
+
+GET_SLEEP_VARIABILITY_DATA = """
+SELECT facts.creation_ts::date as wake_up_date, facts.start_ts, facts.end_ts, facts.value / 60 as hours_slept
+FROM facts
+        JOIN sources ON facts.source_id = sources.id
+        JOIN activity_types ON activity_types.id = facts.activity_type_id
+        JOIN users ON facts.user_id = users.id
+WHERE ((activity_type_id = 6) OR (activity_type_id = 17) OR (activity_type_id = 18) OR (activity_type_id = 54)) 
+AND ((EXTRACT(HOUR FROM facts.start_ts) > 17) OR (EXTRACT(HOUR FROM facts.start_ts) < 12)) 
+AND sources.source_name = 'Pillow'
+AND users.username = %s 
+AND facts.creation_ts >= %s 
+AND facts.creation_ts <= %s
+"""

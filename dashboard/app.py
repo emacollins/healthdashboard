@@ -181,6 +181,21 @@ def update_workout_heatmap(start_date: str, end_date: str):
     CONN_POOL.putconn(conn)
     return figure
 
+@app.callback(
+        Output("SummarySleepVariabilityFigure", "figure"),
+    [
+        Input("DateRange", "start_date"),
+        Input("DateRange", "end_date"),
+    ],
+)
+def update_sleep_variability(start_date: str, end_date: str):
+    conn = get_conn()
+    figure = summary_charts.get_sleep_variability_chart(
+        start_date, end_date, get_username(), conn
+    )
+    CONN_POOL.putconn(conn)
+    return figure
+
 
 def get_conn():
     return CONN_POOL.getconn()

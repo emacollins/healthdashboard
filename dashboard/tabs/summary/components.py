@@ -22,6 +22,8 @@ FAVORITE_WORKOUTS_FIGURE = dcc.Graph(
 
 WORKOUT_HEATMAP_FIGURE = dcc.Graph(id="SummaryWorkoutHeatmapFigure", style=GRAPH_STYLE)
 
+SLEEP_VARIABILITY_FIGURE = dcc.Graph(id="SummarySleepVariabilityFigure", style=GRAPH_STYLE)
+
 TOTAL_CALORIES_BURNED = html.Div(
     id="SummaryCaloriesTotalCaloriesSection",
     children=[
@@ -186,9 +188,21 @@ FAVORITE_WORKOUTS = html.Div(
 )
 
 WORKOUT_HEATMAP = html.Div(
-    id="SummaryFavoriteWorkouts",
+    id="SummaryWorkoutHeatmap",
     children=[
         WORKOUT_HEATMAP_FIGURE,
+    ],
+    style={
+        "display": "flex",
+        "flex-direction": "column",
+        "align-items": "center",
+    },
+)
+
+SLEEP_VARIABILITY = html.Div(
+    id="SummarySleepVariability",
+    children=[
+        SLEEP_VARIABILITY_FIGURE,
     ],
     style={
         "display": "flex",
@@ -231,7 +245,8 @@ SUMMARY_TAB = html.Div(
                     id="SummarySleep",
                     children=[
                         SLEEP_ROLLING_FIGURE,
-                        AVERAGE_SLEEP_PER_NIGHT
+                        AVERAGE_SLEEP_PER_NIGHT,
+                        SLEEP_VARIABILITY
                     ],
                     style={"flex": "1"},
                 ),

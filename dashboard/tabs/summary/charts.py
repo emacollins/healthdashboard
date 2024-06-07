@@ -211,3 +211,20 @@ def get_workout_heatmap(
     fig.update_layout(**config["layout"])
 
     return fig
+
+def get_sleep_variability_chart(start_date: str, end_date: str, username: str, conn: object) -> go.Figure:
+    """Generates a sleep variability chart
+
+    Args:
+        start_date (str): _description_
+        end_date (str): _description_
+        username (str): _description_
+        conn (object): _description_
+
+    Returns:
+        go.Figure: _description_
+    """
+    data = utils.query_db(sql.GET_SLEEP_VARIABILITY_DATA, conn, (username, start_date, end_date))
+    data_fall_aslee_time = data.groupby(by="wake_up_date")["start_ts"].min()
+    data_wake_up_time = data.groupby(by="wake_up_date")["end_ts"].max()
+    data
