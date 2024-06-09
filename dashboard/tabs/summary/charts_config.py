@@ -43,7 +43,31 @@ favorite_workout_chart_config = {
     },
 }
 
-
+sleep_variability_chart_config = {
+    "layout": {
+        "title": {
+            "text": " ",
+            "x": TITLE_X,
+            "y": TITLE_Y,
+            "font": {"color": colors.CHART_TEXT_COLOR, "size": 20},
+        },
+        "xaxis": {
+            "title": "",
+            "color": colors.CHART_TEXT_COLOR,
+            "showgrid": False,
+        },
+        "yaxis": {
+            "title": "",
+            "color": colors.CHART_TEXT_COLOR,
+            "showgrid": False,
+            "range": (0, 5)
+        },
+        "paper_bgcolor": "rgba(0,0,0,0)",
+        "plot_bgcolor": "rgba(0,0,0,0)",
+        "margin": SUMMARY_MARGIN,
+        "font": {"family": fonts.FONT},
+    },
+}
 # X data column is always the index of the dataframe
 summary_charts_config = {
     "ActiveEnergy": {

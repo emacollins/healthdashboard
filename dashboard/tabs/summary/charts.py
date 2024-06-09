@@ -125,10 +125,10 @@ def get_favorite_workout_chart(
     """Creates bar chart of top workouts in date range
 
     Args:
-        start_date (str): _description_
-        end_date (str): _description_
-        username (str): _description_
-        conn (object): _description_
+        start_date (str): Start date for the summary
+        end_date (str): End date for the summary
+        username (str): Username for the summary
+        conn (object): Connection object to the database
     """
     config = cc.favorite_workout_chart_config
     days = (
@@ -163,10 +163,10 @@ def get_workout_heatmap(
     """Creates heatmap of workout time by days of the week and time
 
     Args:
-        start_date (str): _description_
-        end_date (str): _description_
-        username (str): _description_
-        conn (object): _description_
+        start_date (str): Start date for the summary
+        end_date (str): End date for the summary
+        username (str): Username for the summary
+        conn (object): Connection object to the database
     """
     config = cc.workout_heatmap_chart_config
     data = utils.query_db(sql.GET_EXERCISE_MIN, conn, (username, start_date, end_date))
@@ -199,47 +199,137 @@ def get_workout_heatmap(
     )
     data = data[~(data.isna()).all(axis=1)]
     fig = go.Figure(
-    data=go.Heatmap(
-        z=data.values,
-        x=data.columns,
-        y=data.index,
-        colorscale=["white", colors.SUMMARY_EXERCISE_COLOR],
-        showscale=False
+        data=go.Heatmap(
+            z=data.values,
+            x=data.columns,
+            y=data.index,
+            colorscale=["white", colors.SUMMARY_EXERCISE_COLOR],
+            showscale=False,
+        )
     )
-)
 
     fig.update_layout(**config["layout"])
 
     return fig
 
-def get_sleep_variability_chart(start_date: str, end_date: str, username: str, conn: object) -> go.Figure:
-    """Generates a sleep variability chart
+
+def calculate_sleep_variability(data: pd.DataFrame, window: int) -> pd.DataFrame:
+    """Calculates sleep wake up and fall asleep variability columns
+
+    data should have columns:
+        creation_ts
+        fall_asleep_ts
+        wake_up_ts
+
+    Fall asleep and wake up variability and calculating by finding the absolute difference
+    (in hours) to the reference point, which is always midnight on the creation_ts (generallty
+    the day you wake up). This will ensure a consistent reference point in the vast majority of days.
 
     Args:
-        start_date (str): _description_
-        end_date (str): _description_
-        username (str): _description_
-        conn (object): _description_
+        data (pd.DataFrame): Dataframe of raw data to process
+        window (int): Rolling window size for calculating standard deviation
 
     Returns:
-        go.Figure: _description_
+        pd.DataFrame: Data containing variability
     """
-    rolling_window = 14
-    data = utils.query_db(sql.GET_SLEEP_VARIABILITY_DATA, conn, (username, start_date, end_date))
-    data['wake_up_date'] = pd.to_datetime(data['wake_up_date'], utc=True)
-    data['start_ts'] = pd.to_datetime(data['start_ts'],utc=True)
-    
 
-    data_fall_asleep_time = data.groupby(by="wake_up_date")[["start_ts"]].min().reset_index()
-    data_fall_asleep_time['fall_asleep_variability'] = (abs((data_fall_asleep_time["start_ts"] - data_fall_asleep_time["wake_up_date"].dt.normalize()).dt.total_seconds()) / 3600).rolling(rolling_window).std()
-    data_fall_asleep_time['hours_slept_variability'] = data_fall_asleep_time['hours_slept'].rolling(rolling_window).std()
+    data["hours_slept_variability"] = (
+        (((data["wake_up_ts"] - data["fall_asleep_ts"]).dt.total_seconds()) / 3600)
+        .rolling(window)
+        .std()
+    )
 
-    data_wake_up_time = data.groupby(by="wake_up_date")[["end_ts"]].max().reset_index()
-    data_wake_up_time['wake_up_variability'] = (abs((data_wake_up_time["end_ts"] - data_wake_up_time["wake_up_date"].dt.normalize()).dt.total_seconds()) / 3600).rolling(rolling_window).std()
-    df = pd.DataFrame(data={'date': data['wake_up_date'], 'fall_asleep_variability': data_fall_asleep_time["fall_asleep_variability"], 'wake_up_variability': data_wake_up_time['wake_up_variability']})
-    df
+    data["wake_up_variability"] = (
+        (
+            abs(
+                (
+                    data["wake_up_ts"] - data["creation_ts"].dt.normalize()
+                ).dt.total_seconds()  # Normalize to midnight reference point
+            )
+            / 3600
+        )
+        .rolling(window)
+        .std()
+    )
+
+    data["fall_asleep_variability"] = (
+        (
+            abs(
+                (
+                    data["fall_asleep_ts"] - data["creation_ts"].dt.normalize()
+                ).dt.total_seconds()
+            )
+            / 3600
+        )
+        .rolling(window)
+        .std()
+    )
+
+    return data
 
 
+def get_sleep_variability_chart(
+    start_date: str, end_date: str, username: str, conn: object
+) -> go.Figure:
+    """Generates a sleep variability chart
 
+    Looks at the hours slept variability, wake up time and fall asleep time variabilty.
+    Wake up and fall asleep time are measured as absolute number of hours (float) from midnight
+    of the wake up date.
 
-    data
+    Args:
+        Args:
+        start_date (str): Start date for the summary
+        end_date (str): End date for the summary
+        username (str): Username for the summary
+        conn (object): Connection object to the database
+    Returns:
+        go.Figure: Sleep Variability figure
+    """
+    window = 60  # rolling window parameter
+    data_columns = ["creation_ts", "fall_asleep_ts", "wake_up_ts"]
+    mode = "lines"
+    data = utils.query_db(
+        sql.GET_SLEEP_VARIABILITY_DATA, conn, (username, start_date, end_date)
+    )
+    for col in data.columns:
+        data[col] = pd.to_datetime(data[col], utc=True)
+        if col not in data_columns:
+            raise ValueError(
+                "GET_SLEEP_VARIABILITY_DATA SQL query did not return expected columns for calcing sleep var"
+            )
+
+    data = calculate_sleep_variability(data=data, window=window)
+
+    fig = go.Figure()
+    fig.update_layout(cc.sleep_variability_chart_config["layout"])
+    fig.add_trace(
+        go.Scatter(
+            x=data["creation_ts"],
+            y=data["wake_up_variability"],
+            mode=mode,
+            line=dict(shape="spline", color=colors.SUMMARY_WAKE_UP_VARIABILITY_COLOR),
+            name="Wake Up Variability"
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=data["creation_ts"],
+            y=data["fall_asleep_variability"],
+            mode=mode,
+            line=dict(
+                shape="spline", color=colors.SUMMARY_FALL_ASLEEP_VARIABILITY_COLOR
+            ),
+            name="Fall Asleep Variability"
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=data["creation_ts"],
+            y=data["hours_slept_variability"],
+            mode=mode,
+            line=dict(shape="spline", color=colors.SUMMARY_SLEEP_COLOR),
+            name="Hours Slept Variability"
+        )
+    )
+    return fig
