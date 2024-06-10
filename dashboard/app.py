@@ -182,7 +182,9 @@ def update_workout_heatmap(start_date: str, end_date: str):
     return figure
 
 @app.callback(
-        Output("SummarySleepVariabilityFigure", "figure"),
+        Output("SummaryHoursSleptVariabilityFigure", "figure"),
+        Output("SummaryWakeUpTimeVariabilityFigure", "figure"),
+        Output("SummaryFallAsleepTimeVariabilityFigure", "figure"),
     [
         Input("DateRange", "start_date"),
         Input("DateRange", "end_date"),

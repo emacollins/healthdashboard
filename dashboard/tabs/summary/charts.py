@@ -233,13 +233,13 @@ def calculate_sleep_variability(data: pd.DataFrame, window: int) -> pd.DataFrame
         pd.DataFrame: Data containing variability
     """
 
-    data["hours_slept_variability"] = (
+    data["Hours Slept Variability"] = (
         (((data["wake_up_ts"] - data["fall_asleep_ts"]).dt.total_seconds()) / 3600)
         .rolling(window)
         .std()
     )
 
-    data["wake_up_variability"] = (
+    data["Wake Up Time Variability"] = (
         (
             abs(
                 (
@@ -252,7 +252,7 @@ def calculate_sleep_variability(data: pd.DataFrame, window: int) -> pd.DataFrame
         .std()
     )
 
-    data["fall_asleep_variability"] = (
+    data["Fall Asleep Time Variability"] = (
         (
             abs(
                 (
@@ -270,7 +270,7 @@ def calculate_sleep_variability(data: pd.DataFrame, window: int) -> pd.DataFrame
 
 def get_sleep_variability_chart(
     start_date: str, end_date: str, username: str, conn: object
-) -> go.Figure:
+) -> tuple[go.Figure]:
     """Generates a sleep variability chart
 
     Looks at the hours slept variability, wake up time and fall asleep time variabilty.
@@ -300,36 +300,23 @@ def get_sleep_variability_chart(
             )
 
     data = calculate_sleep_variability(data=data, window=window)
-
-    fig = go.Figure()
-    fig.update_layout(cc.sleep_variability_chart_config["layout"])
-    fig.add_trace(
-        go.Scatter(
-            x=data["creation_ts"],
-            y=data["wake_up_variability"],
-            mode=mode,
-            line=dict(shape="spline", color=colors.SUMMARY_WAKE_UP_VARIABILITY_COLOR),
-            name="Wake Up Variability"
-        )
+    data = (
+        data.set_index("creation_ts")
+        .drop(columns=["fall_asleep_ts", "wake_up_ts"])
+        .dropna()
     )
-    fig.add_trace(
-        go.Scatter(
-            x=data["creation_ts"],
-            y=data["fall_asleep_variability"],
-            mode=mode,
-            line=dict(
-                shape="spline", color=colors.SUMMARY_FALL_ASLEEP_VARIABILITY_COLOR
-            ),
-            name="Fall Asleep Variability"
+    
+    figs = []
+    for metric in data.columns:
+        fig = go.Figure()
+        fig.update_layout(cc.sleep_variability_charts_config[metric]["layout"])
+        fig.add_trace(
+            go.Scatter(
+                x=data.index,
+                y=data[metric],
+                mode=mode,
+                line=dict(shape="spline"),
+            )
         )
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=data["creation_ts"],
-            y=data["hours_slept_variability"],
-            mode=mode,
-            line=dict(shape="spline", color=colors.SUMMARY_SLEEP_COLOR),
-            name="Hours Slept Variability"
-        )
-    )
-    return fig
+        figs.append(fig)
+    return tuple(figs)
