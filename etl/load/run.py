@@ -19,7 +19,7 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 
 # Create a formatter
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter("Load - %(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 # Add formatter to handler
 handler.setFormatter(formatter)
@@ -79,7 +79,7 @@ def main(fact_table_directory: str, environment: str) -> None:
         logger.error(f"Unknown environment: {environment}")
         assert 1 == 0
 
-    logger.info(f"Starting Load Service: {fact_table_directory}")
+    logger.info(f"Starting Load Service...")
 
     #All fact tables and their names in format: {table_name: pd.DataFrame, ...}
     fact_tables = get_fact_table_files(fact_table_directory)

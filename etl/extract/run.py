@@ -23,7 +23,7 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 
 # Create a formatter
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('Extract - %(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # Add formatter to handler
 handler.setFormatter(formatter)
