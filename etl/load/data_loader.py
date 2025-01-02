@@ -3,10 +3,10 @@ import pandas as pd
 import io
 import logging
 
-import constants
-import sql
+import etl.load.constants as constants
+import etl.load.sql as sql
 
-from typing import Dict, Tuple, List
+from typing import Dict
 
 
 # Set up logger

@@ -26,13 +26,16 @@ WHERE users.username = %s AND summary.creation_date >= %s AND summary.creation_d
 ORDER BY summary.creation_date
 """
 
-GET_TOTAL_CALORIES = """
-SELECT SUM(value) as cals
-FROM facts
-JOIN users ON facts.user_id = users.id
-WHERE (activity_type_id = 53 OR activity_type_id = 40) 
-AND users.username = %s 
-AND facts.creation_ts::date >= %s AND facts.creation_ts::date <= %s
+GET_AVG_CALORIES = """
+SELECT AVG(cal_sum) as cals
+FROM (SELECT SUM(value) as cal_sum
+	FROM facts
+	JOIN users ON facts.user_id = users.id
+	WHERE (activity_type_id = 53 OR activity_type_id = 40)
+    AND users.username = %s 
+    AND facts.creation_ts::date >= %s AND facts.creation_ts::date <= %s
+    GROUP BY facts.creation_ts::date
+) as sum_query
 """
 
 GET_TOTAL_EXERCISE_MINUTES = """

@@ -6,10 +6,11 @@ import zipfile
 import boto3
 import os
 
-import utils
+from tempfile import TemporaryDirectory
 import shutil
 
-import constants
+import etl.extract.constants as constants
+import etl.extract.utils as utils
 
 from typing import Dict
 import logging
@@ -31,7 +32,7 @@ handler.setFormatter(formatter)
 # Add handler to logger
 logger.addHandler(handler)
 
-def unzip_harvest_file(input_path: str) -> str:
+def unzip_harvest_file(input_path: str, tmp_dir) -> str:
     """Unzip the harvest file and return the path to the XML file
 
     Args:
@@ -42,8 +43,6 @@ def unzip_harvest_file(input_path: str) -> str:
     """
     logger.info(f"Unzipping harvest file: {input_path}")
 
-    tmp_dir = os.path.dirname(os.path.realpath(__file__)) + "/tmp/"
-    os.makedirs(tmp_dir, exist_ok=True)
     tmp_file_path = os.path.join(tmp_dir, 'zipfile.zip')
 
     if utils.is_s3_uri(input_path):
@@ -90,17 +89,15 @@ def main(input_path: str) -> None:
         input_path (str): Path to zip file (can be S3 URI)
     """
 
-    try:
-        data_file_path = unzip_harvest_file(input_path)
+    with TemporaryDirectory() as tmp_dir:
+        data_file_path = unzip_harvest_file(input_path, tmp_dir)
         data = get_data(data_file_path)
-        for tag, df in data.items():
-            output_path = input_path.replace('harvest', 'extract')
-            output_path = os.path.splitext(output_path)[0] + tag + '.csv.gz'
-            df.to_csv(output_path, index=False, compression='gzip')
-            logger.info(f"Data written to: {output_path}")
-        logger.info("Extract process completed")
-    finally:
-        shutil.rmtree("tmp/")
+    for tag, df in data.items():
+        output_path = input_path.replace('harvest', 'extract')
+        output_path = os.path.splitext(output_path)[0] + tag + '.csv.gz'
+        df.to_csv(output_path, index=False, compression='gzip')
+        logger.info(f"Data written to: {output_path}")
+    logger.info("Extract process completed")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Health Dashboard Extract Process')

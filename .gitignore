@@ -167,3 +167,5 @@ cython_debug/
 
 # Ignore migrations
 run_entire_migration.sh
+
+etl/data/*

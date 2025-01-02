@@ -2,10 +2,7 @@ from dash import html, dcc
 from datetime import datetime as dt
 
 from tabs.summary.components import SUMMARY_TAB
-from tabs.activity.main import ACTIVITY_TAB
-from tabs.workout.main import WORKOUT_TAB
-from tabs.sleep.main import SLEEP_TAB
-from tabs.insights.main import INSIGHTS_TAB
+from tabs.upload.main import UPLOAD_TAB
 
 import colors, fonts
 
@@ -60,7 +57,7 @@ SETTINGS_BAR = html.Div(
         dcc.DatePickerRange(
             id="DateRange",
             start_date=dt(2022, 7, 1).date(),
-            end_date=dt(2024, 6, 4).date(),
+            end_date=dt.now().date(),
             style={"font-family": fonts.FONT, "color": colors.GENERAL_TEXT_COLOR},
         ),
     ]
@@ -70,9 +67,6 @@ TABS = dcc.Tabs(
     id="tabs",
     children=[
         dcc.Tab(label="Summary", children=SUMMARY_TAB, className='custom-tabs', selected_className='custom-tab--selected'),
-        dcc.Tab(label="Activity", children=ACTIVITY_TAB, className='custom-tabs', selected_className='custom-tab--selected'),
-        dcc.Tab(label="Workout", children=WORKOUT_TAB, className='custom-tabs', selected_className='custom-tab--selected'),
-        dcc.Tab(label="Sleep", children=SLEEP_TAB, className='custom-tabs', selected_className='custom-tab--selected'),
-        dcc.Tab(label="Insights", children=INSIGHTS_TAB, className='custom-tabs', selected_className='custom-tab--selected'),
+        dcc.Tab(label="Upload Data", children=UPLOAD_TAB, className='custom-tabs', selected_className='custom-tab--selected'),
     ],
 )

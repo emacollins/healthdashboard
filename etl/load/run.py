@@ -1,14 +1,14 @@
 import pandas as pd
-import constants
+
 import argparse
 import boto3
 
 from typing import Dict, Tuple, List
 
 import logging
-import re
 
-from data_loader import DataLoader
+import etl.load.constants as constants
+from etl.load.data_loader import DataLoader
 
 # Set up logger
 logger = logging.getLogger(__name__)

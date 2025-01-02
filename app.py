@@ -1,18 +1,25 @@
 # Import necessary libraries
 import os
-from datetime import datetime as dt
 
 import dash
-import pandas as pd
-from dash import dcc, html
-from dash.dependencies import Input, Output
+from dash import html
+from dash.dependencies import Input, Output, State
 from psycopg2 import pool
+from pathlib import Path
+import base64
 
 import sections as s
 import tabs.summary.charts as summary_charts
 import tabs.summary.analytics as summary_analytics
 
+import etl.extract.run as extract
+import etl.transform.run as transform
+import etl.load.run as load
+
 USERNAME = "eric"
+
+ETL_DATA_DIRECTORY = Path().cwd() / "etl" / "data"
+
 CONN_POOL = pool.SimpleConnectionPool(
     minconn=1,
     maxconn=20,
@@ -56,30 +63,6 @@ def generate_summary_rolling_figures(start_date: str, end_date: str):
     return figures["ActiveEnergy"], figures["ExerciseMinutes"], figures["SleepHours"]
 
 
-@app.callback(
-    Output("SummaryCaloriesTotalCaloriesBurned", "children"),
-    Output("SummaryCaloriesPowerEquivalentValue", "children"),
-    [
-        Input("DateRange", "start_date"),
-        Input("DateRange", "end_date"),
-        Input("SummaryCaloriesPowerEquivalentDropdown", "value"),
-    ],
-)
-def update_total_calories(start_date: str, end_date: str, comparison_object: str):
-    # Calculate the total calories burned for the selected date range
-    conn = get_conn()
-    total_calories = summary_analytics.calculate_total_calories(
-        start_date, end_date, get_username(), conn
-    )
-
-    power_equivalent_value, power_equivalent_unit = (
-        summary_analytics.calculate_power_equivalent(total_calories, comparison_object)
-    )
-    CONN_POOL.putconn(conn)
-    return (
-        f"{total_calories:,}",
-        f"{round(power_equivalent_value, 1):,} {power_equivalent_unit}",
-    )
 
 @app.callback(
     Output("SummaryExerciseTotalExercise", "children"),
@@ -117,39 +100,6 @@ def update_total_exercise(start_date: str, end_date: str):
         f"{avg_sleep:.1f}",
     )
 
-
-@app.callback(
-    Output("SummaryCaloriesPowerEquivalentDropdown", "options"),
-    Output("SummaryCaloriesPowerEquivalentDropdown", "value"),
-    Input("SummaryCaloriesPowerEquivalentDropdown", "id"),
-)
-def get_power_equivalent_dropdown_values(id: str):
-    options = summary_analytics.get_power_equivalent_dropdown_values()
-    return options, options[0]
-
-@app.callback(
-        Output("BurgersValue", "children"),
-        Output("CheezeitsValue", "children"),
-        [
-        Input("DateRange", "start_date"),
-        Input("DateRange", "end_date"),
-        ]
-)
-def update_food_equivalent(start_date: str, end_date: str):
-    # Calculate the total calories burned for the selected date range
-    conn = get_conn()
-    total_calories = summary_analytics.calculate_total_calories(
-        start_date, end_date, get_username(), conn
-    )
-
-    burgers, cheezeits = (
-        summary_analytics.calculate_food_equivalent(total_calories)
-    )
-    CONN_POOL.putconn(conn)
-    return (
-        f"{round(burgers, 1):,}",
-        f"{round(cheezeits, 1):,}",
-    )
 
 @app.callback(
         Output("SummaryFavoriteWorkoutsFigure", "figure"),
@@ -197,6 +147,72 @@ def update_sleep_variability(start_date: str, end_date: str):
     )
     CONN_POOL.putconn(conn)
     return figure
+
+
+@app.callback(
+    Output("SummaryCaloriesAvgCaloriesBurned", "children"),
+    [
+        Input("DateRange", "start_date"),
+        Input("DateRange", "end_date"),
+    ],
+)
+def update_total_calories(start_date: str, end_date: str):
+    # Calculate the total calories burned for the selected date range
+    conn = get_conn()
+    avg_calories = summary_analytics.calculate_average_calories(
+        start_date, end_date, get_username(), conn
+    )
+
+    CONN_POOL.putconn(conn)
+    return (
+        f"{avg_calories:,}",
+    )
+
+# Callback to handle file upload
+@app.callback(
+    Output("output-message", "children"),
+    Input("upload-file", "contents"),
+    State("upload-file", "filename"),
+    State("upload-file", "last_modified"),
+)
+def etl(contents, filename, last_modified):
+
+    harvest_directory = ETL_DATA_DIRECTORY / "harvest"
+    extract_directory = ETL_DATA_DIRECTORY / "extract"
+    transform_directory = ETL_DATA_DIRECTORY / "transform"
+
+
+    if contents is None:
+        return "No file uploaded yet."
+
+    # Extract the content type and file data
+    content_type, content_string = contents.split(',')
+
+    if "application/zip" not in content_type:
+        return "Error: The uploaded file should be a .zip file"
+
+    # Decode the base64 string
+    decoded = base64.b64decode(content_string)
+
+    # Save the file to the upload directory
+
+    harvest_file = harvest_directory / "export.zip"
+    with open(harvest_file, "wb") as file:
+        file.write(decoded)
+
+    extract.main(input_path=str(harvest_file))
+    transform.main(record_input_path=str(extract_directory / "exportRecord.csv.gz"),
+                   workout_input_path=str(extract_directory / "exportWorkout.csv.gz"),
+                   summary_input_path=str(extract_directory / "exportActivitySummary.csv.gz"),
+                   output_directory=str(transform_directory),
+                   username=get_username(),
+                   email="test@test.com"
+                   )
+    load.main(fact_table_directory=str(transform_directory),
+              environment="LOCAL")
+
+    return f"File '{filename}' has been processed"
+
 
 
 def get_conn():
