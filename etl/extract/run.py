@@ -78,7 +78,7 @@ def get_data(data_file_path: str) -> Dict[str, pd.DataFrame]:
     return data
 
 
-def main(input_path: str) -> None:
+def main(input_path: str, output_file: bool = False) -> None | Dict[str, pd.DataFrame]:
     """Main function to run extract process
 
     The extract process takes the zip file exported from Apple
@@ -92,12 +92,16 @@ def main(input_path: str) -> None:
     with TemporaryDirectory() as tmp_dir:
         data_file_path = unzip_harvest_file(input_path, tmp_dir)
         data = get_data(data_file_path)
-    for tag, df in data.items():
-        output_path = input_path.replace('harvest', 'extract')
-        output_path = os.path.splitext(output_path)[0] + tag + '.csv.gz'
-        df.to_csv(output_path, index=False, compression='gzip')
-        logger.info(f"Data written to: {output_path}")
-    logger.info("Extract process completed")
+    if output_file:
+        for tag, df in data.items():
+            output_path = input_path.replace('harvest', 'extract')
+            output_path = os.path.splitext(output_path)[0] + tag + '.csv.gz'
+            df.to_csv(output_path, index=False, compression='gzip')
+            logger.info(f"Data written to: {output_path}")
+    else:
+        logger.info("Extract process completed")
+        return data
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Health Dashboard Extract Process')

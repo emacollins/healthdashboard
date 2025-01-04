@@ -60,6 +60,8 @@ SETTINGS_BAR = html.Div(
             end_date=dt.now().date(),
             style={"font-family": fonts.FONT, "color": colors.GENERAL_TEXT_COLOR},
         ),
+        dcc.Dropdown(id="UserSelectDropdown",
+                     )
     ]
 )
 # ---------------------------------------------------------

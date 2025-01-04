@@ -98,3 +98,8 @@ AND facts.creation_ts >= %s
 AND facts.creation_ts <= %s
 GROUP BY facts.creation_ts
 """
+
+GET_USERS = """
+SELECT username
+FROM users
+"""

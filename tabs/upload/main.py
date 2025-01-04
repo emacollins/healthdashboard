@@ -3,11 +3,12 @@ from dash import html, dcc
 
 UPLOAD_TAB = html.Div(
     [
+        dcc.Input(id="upload-username-input", type="text", required=True),
         dcc.Upload(
             id="upload-file",
             children=html.Div(["Drag and Drop or ", html.A("Select Files")]),
             style={
-                "width": "100%",
+                "width": "50%",
                 "height": "60px",
                 "lineHeight": "60px",
                 "borderWidth": "1px",

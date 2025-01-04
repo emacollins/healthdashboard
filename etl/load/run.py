@@ -19,14 +19,15 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 
 # Create a formatter
-formatter = logging.Formatter("Load - %(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "Load - %(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 # Add formatter to handler
 handler.setFormatter(formatter)
 
 # Add handler to logger
 logger.addHandler(handler)
-
 
 
 def get_fact_table_files(fact_table_directory: str) -> Dict[str, pd.DataFrame]:
@@ -71,8 +72,9 @@ def get_s3_file_uris(s3_bucket: str, s3_key: str) -> List[str]:
     return file_paths
 
 
-
-def main(fact_table_directory: str, environment: str) -> None:
+def main(
+    data: Dict[str, pd.DataFrame], environment: str, fact_table_directory: str = None
+) -> None:
     """Load service inserts data into the database"""
 
     if environment not in constants.DATABASE_CONFIG.keys():
@@ -81,13 +83,16 @@ def main(fact_table_directory: str, environment: str) -> None:
 
     logger.info(f"Starting Load Service...")
 
-    #All fact tables and their names in format: {table_name: pd.DataFrame, ...}
-    fact_tables = get_fact_table_files(fact_table_directory)
-    logger.info(f"Fact Tables to be loaded: {', '.join(fact_tables.keys())}")
+    # All fact tables and their names in format: {table_name: pd.DataFrame, ...}
+    if fact_table_directory:
+        fact_tables = get_fact_table_files(fact_table_directory)
+        logger.info(f"Fact Tables to be loaded: {', '.join(fact_tables.keys())}")
+        loader = DataLoader(fact_tables, environment)
+    else:
+        loader = DataLoader(data, environment)
 
-    loader = DataLoader(fact_tables, environment)
     loader.load()
-    
+
     logger.info("Load Process Complete")
 
 

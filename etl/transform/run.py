@@ -1,9 +1,12 @@
 import pandas as pd
 import argparse
 import boto3
+import sys
 
 import logging
 import re
+
+from typing import Dict
 
 import etl.transform.constants as constants
 
@@ -16,7 +19,9 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.INFO)
 
 # Create a formatter
-formatter = logging.Formatter("Transform - %(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "Transform - %(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 # Add formatter to handler
 handler.setFormatter(formatter)
@@ -319,19 +324,28 @@ def fill_missing_device_columns(fact_table: pd.DataFrame) -> pd.DataFrame:
 
 
 def main(
-    record_input_path: str,
-    workout_input_path: str,
-    summary_input_path: str,
-    output_directory: str,
     username: str,
     email: str,
-) -> None:
+    data: Dict[str, pd.DataFrame] = None,
+    record_input_path: str = None,
+    workout_input_path: str = None,
+    summary_input_path: str = None,
+    output_directory: str = None,
+) -> None | Dict[str, pd.DataFrame]:
     """Main function to run the transform process"""
 
-    # Load the data
-    record_df, workout_df, summary_df = load_data(
-        record_input_path, workout_input_path, summary_input_path
-    )
+    if data:
+        record_df = data["Record"]
+        workout_df = data["Workout"]
+        summary_df = data["ActivitySummary"]
+
+    elif all([record_input_path, workout_input_path, summary_input_path]):
+        record_df, workout_df, summary_df = load_data(
+            record_input_path, workout_input_path, summary_input_path
+        )
+    else:
+        logger.error("Input must be either data or paths to input data files!")
+
     logger.info("Data loaded successfully")
 
     # Fix sleep data in record_df
@@ -348,7 +362,10 @@ def main(
     logger.info("Summary data transformed successfully")
 
     # Save the data
-    output_data(fact_table, summary_table, output_directory, username)
+    if output_directory:
+        output_data(fact_table, summary_table, output_directory, username)
+    else:
+        return {"fact_table": fact_table, "summary_table": summary_table}
 
 
 if __name__ == "__main__":

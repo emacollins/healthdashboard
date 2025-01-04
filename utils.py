@@ -1,5 +1,9 @@
 import pandas as pd
 
+from typing import List
+
+import sql
+
 def query_db(query: str, conn: object, params: tuple = None) -> pd.DataFrame:
     """Queries Postgres DB and returns dataframe
 
@@ -44,4 +48,7 @@ def split_activity_name_string(text: str) -> str:
         else:
             index+=1
     return new_text
-            
+
+def get_users(conn) -> List[str]:
+    df = query_db(sql.GET_USERS, conn=conn)
+    return list(df["username"])
